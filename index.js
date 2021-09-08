@@ -1,4 +1,5 @@
-const config  = require('./config.json');
+
+const {config} = require('./config.js');
 const {checkPendingReactions} = require('./db');
 
 const {Client, Collection, Intents} = require('discord.js');
@@ -21,9 +22,13 @@ for (const file of commandFiles) {
 }
 
 
+
 client.once('ready', async () => {
-    console.log('Ready!');
+    // noinspection JSUnresolvedVariable
+    const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`);
+    // noinspection JSUnresolvedVariable
     await client.guilds.cache.get(`${BigInt(config.guildID)}`)?.commands.set(client.commands.toJSON());
+    console.log("Connected to", guild.name, guild.id);
 });
 
 
@@ -44,15 +49,16 @@ client.on("presenceUpdate", (oldPresence, newPresence) => {
 });
 
 client.on('interactionCreate', async interaction => {
-    //console.log(interaction);
     if (!interaction.isCommand()) return;
-
+    // noinspection JSUnresolvedVariable
     if (!client.commands.has(interaction.commandName)) return;
 
     try {
+        // noinspection JSUnresolvedVariable
         await client.commands.get(interaction.commandName).execute(interaction);
     } catch (error) {
         console.error(error);
+        // noinspection JSUnresolvedFunction
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true }).catch(console.error)
     }
 });
@@ -70,6 +76,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
             return;
         }
     }
+    // noinspection JSUnresolvedVariable
     let guild = await client.guilds.fetch(config.guildID);
     guild.members.fetch(user.id)
         .then ((member) =>{
@@ -80,9 +87,12 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
 client.on("messageCreate", message => {
     if (message.author.id === client.user.id) return;
+    // noinspection JSUnresolvedVariable
     if (config.removeEmbeds.indexOf(message.channel.id) !== -1) {
         message.suppressEmbeds(true).catch(console.error)
     }
 });
 
-client.login(config.token).catch(console.error)
+client.login(config.token).catch(console.error);
+
+module.exports = config;

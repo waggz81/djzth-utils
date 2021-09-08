@@ -1,4 +1,4 @@
-const config = require('../config.json');
+const {config} = require('../config');
 const {addRolePending} = require('../db.js');
 
 module.exports = {
@@ -22,7 +22,7 @@ module.exports = {
     async execute(interaction) {
         const target = interaction.options.get('target').user.username + '#' + interaction.options.get('target').user.discriminator;
         const roleID = interaction.options.get('role').role.id.toString();
-        if (interaction.channelId === config.access_control) {
+        if (config.access_control.includes(interaction.channelId)) {
             const targetHasRole = interaction.options.get('target').member.roles.cache.has(interaction.options.get('role').role.id);
             if (!targetHasRole) {
                 await interaction.reply({ content: "Error: the selected user does not have the selected role!", ephemeral: true });
