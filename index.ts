@@ -1,43 +1,66 @@
-
-const {config} = require('./config.js');
-const {checkPendingReactions} = require('./db');
-
-const {Client, Collection, Intents} = require('discord.js');
-const fs = require('fs');
-const voiceChannels = require('./tempVoiceChannels');
-
+import {Client, Collection, Intents} from "discord.js";
+import {REST} from "@discordjs/rest";
+import {Routes} from "discord-api-types/v9";
+import * as fs from "fs";
+import {config} from "./config";
+import {checkPendingReactions} from "./db";
+import {voiceChanged} from "./tempVoiceChannels";
 
 const myIntents = new Intents();
 myIntents.add('GUILDS', 'GUILD_PRESENCES', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS');
 
 const client = new Client({ intents: myIntents, partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+
+//augment Client to include commands collection for typescript
+declare module "discord.js" {
+    interface Client {
+        commands: Collection<any, any>
+    }
+}
+
+//add all commands from commands subdir
 client.commands = new Collection();
+const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
-    // set a new item in the Collection
-    // with the key as the command name and the value as the exported module
-    client.commands.set(command.name, command);
+    // Set a new item in the Collection
+    // With the key as the command name and the value as the exported module
+    client.commands.set(command.data.name, command);
+    commands.push(command.data.toJSON());
 }
 
-
-
+//client connected and ready
 client.once('ready', async () => {
-    // noinspection JSUnresolvedVariable
     const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`);
-    // noinspection JSUnresolvedVariable
-    await client.guilds.cache.get(`${BigInt(config.guildID)}`)?.commands.set(client.commands.toJSON());
     console.log("Connected to", guild.name, guild.id);
+
+    //push the slash commands
+    const rest = new REST({ version: '9' }).setToken(config.token);
+    try {
+        await rest.put(
+            Routes.applicationGuildCommands(client.user.id, guild.id),
+            { body: commands },
+        );
+
+        console.log('Successfully registered application commands.');
+    } catch (error) {
+        console.error(error);
+    }
+    //load additional modules
+    require('./web');
+    require('./scheduler');
 });
 
-
+//member changed voice channels
 client.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
-   voiceChannels.voiceChanged(oldVoiceState, newVoiceState);
+   voiceChanged(oldVoiceState, newVoiceState);
 });
 
+//member updated presence
 client.on("presenceUpdate", (oldPresence, newPresence) => {
-    if (!newPresence.activities) return false;
+    if (!newPresence.activities) return;
     newPresence.activities.forEach(activity => {
         if (activity.type === "STREAMING") {
             //console.log(`${newPresence.user.tag} is streaming at ${activity.url}.`);
@@ -48,21 +71,23 @@ client.on("presenceUpdate", (oldPresence, newPresence) => {
     });
 });
 
+//member used slash command
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
-    // noinspection JSUnresolvedVariable
-    if (!client.commands.has(interaction.commandName)) return;
+
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command) return;
 
     try {
-        // noinspection JSUnresolvedVariable
-        await client.commands.get(interaction.commandName).execute(interaction);
+        await command.execute(interaction);
     } catch (error) {
         console.error(error);
-        // noinspection JSUnresolvedFunction
-        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true }).catch(console.error)
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
 });
 
+//member reacted to a message
 client.on('messageReactionAdd', async (reaction, user) => {
     if (user.id === client.user.id) return;
     // When a reaction is received, check if the structure is partial
@@ -76,7 +101,6 @@ client.on('messageReactionAdd', async (reaction, user) => {
             return;
         }
     }
-    // noinspection JSUnresolvedVariable
     let guild = await client.guilds.fetch(config.guildID);
     guild.members.fetch(user.id)
         .then ((member) =>{
@@ -87,7 +111,6 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
 client.on("messageCreate", message => {
     if (message.author.id === client.user.id) return;
-    // noinspection JSUnresolvedVariable
     if (config.removeEmbeds.indexOf(message.channel.id) !== -1) {
         message.suppressEmbeds(true).catch(console.error)
     }

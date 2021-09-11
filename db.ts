@@ -7,7 +7,23 @@ let db = new sqlite3.Database('./database.db', (err) => {
     console.log('Connected to the database.');
 });
 
-function addRolePending (messageID, interaction) {
+//from https://blog.pagesd.info/2019/10/29/use-sqlite-node-async-await/
+// Hack to look like node-postgres
+// (and handle async / await operation)
+db.query = function (sql, params) {
+    let that = this;
+    return new Promise(function (resolve, reject) {
+        that.all(sql, params, function (error, rows) {
+            if (error)
+                reject(error);
+            else
+                resolve({ rows: rows });
+        });
+    });
+};
+
+//someone used addrole command for a role that isn't auto approved and requires someone with manage roles permission to approve it
+export function addRolePending (messageID, interaction) {
     let data = [messageID, interaction.member.id, interaction.options.get('target').user.id, interaction.options.get('role').role.id, interaction.commandName];
     let sql = `INSERT INTO 
                 pending_roles (messageID, submitter, target, role, add_remove)
@@ -15,12 +31,14 @@ function addRolePending (messageID, interaction) {
 
     db.run(sql, data, function(err) {
         if (err) {
-            return console.error(err.message);
+            console.error(err.message);
         }
     });
+
 }
 
-function checkPendingReactions (reaction, member) {
+//a member with manage roles permission reacted to a message, let's see if it's in the pending role requests table
+export function checkPendingReactions (reaction, member) {
 
     if (!member.permissions.has('MANAGE_ROLES')) return;
 
@@ -68,6 +86,7 @@ function checkPendingReactions (reaction, member) {
     });
 }
 
+//update embed of pending role requests
 function resolvePending (message, member, approved = false) {
     let color = 15141120;
     let footer = (approved ? "Approved" : "Rejected") + ` by ${member.displayName}`;
@@ -99,6 +118,67 @@ function resolvePending (message, member, approved = false) {
         }).catch(console.error)
 }
 
-module.exports = {
-    addRolePending, checkPendingReactions
+//add newly submitted keystone data to database
+export function uploadKeystones (entry) {
+    //check timestamp on key entry and only update if newer
+    let sql = `SELECT timestamp FROM keystones WHERE character = '${entry.character}'`;
+
+    db.get(sql, [], (err, row) => {
+        if (err) {
+            throw err;
+        }
+        let timestamp = (typeof row === 'undefined') ? 0 : row.timestamp;
+        if (Math.sign(entry.timestamp - timestamp)) {
+            console.log("Updating ", entry.character);
+            let sql = `REPLACE INTO 
+                    keystones (character, name, class, spec, role, score_all, score_tank, score_healer, score_dps, guild, key_level, dungeon_name, timestamp, uploader)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            db.run(sql, Object.values(entry), function (err) {
+                if (err) {
+                    return console.error(err.message);
+                }
+            });
+        }
+    });
 }
+
+//get keystone data from database
+export async function getKeystones (min = null, max = null, dungeon = null) {
+    //base sql query
+    let sql = `SELECT * FROM keystones`;
+    if (min || max || dungeon ) {
+        sql = sql + ` WHERE `;
+        if (min) {
+            sql = sql + `key_level >= ${min} AND `
+        }
+        if (max) {
+            sql = sql + `key_level <= ${max} AND `
+        }
+        if (dungeon) {
+            sql = sql + `dungeon_name = '${dungeon}' AND `
+        }
+        sql = sql.substring(0, sql.length-5)
+        console.log(sql);
+    }
+    try {
+        const result = await db.query(sql, []);
+        //console.log ("db", result.rows);
+        return result.rows;
+    } catch (err) {
+        return console.error(err.message);
+    }
+}
+
+//remove all keys from db at weekly reset
+export function truncateKeystones () {
+    let sql = `DELETE FROM keystones`;
+    db.run(sql, [], function(err){
+        if (err) console.error(err)
+    });
+}
+
+process.on('SIGINT', () => {
+    db.close();
+    console.log("Connection to database closed.");
+    process.exit();
+});

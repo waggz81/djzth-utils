@@ -1,25 +1,15 @@
-const {config} = require('../config');
-const {addRolePending} = require('../db.js');
+import {addRolePending} from "../db";
+import {config} from "../config";
+import {SlashCommandBuilder} from "@discordjs/builders";
 
 module.exports = {
-    name: 'addrole',
-    description: 'Add a role to a user',
-    options: [
-        {
-            name: 'target',
-            description: 'Select a user',
-            type: 'USER',
-            required: true,
-        },
-        {
-            name: 'role',
-            description: 'Select a role',
-            type: 'ROLE',
-            required: true,
-        },
-    ],
-    ephemeral: true,
+    data: new SlashCommandBuilder()
+        .setName("addrole")
+        .setDescription("Add a role to a user")
+        .addUserOption((option) => option.setName("target").setDescription("Select a user").setRequired(true))
+        .addRoleOption((option) => option.setName("role").setDescription("Select a role").setRequired(true)),
     async execute(interaction) {
+        console.log(interaction)
         const target = interaction.options.get('target').user.username + '#' + interaction.options.get('target').user.discriminator;
         const roleID = interaction.options.get('role').role.id.toString();
         if (config.access_control.includes(interaction.channelId)) {
@@ -30,7 +20,7 @@ module.exports = {
             }
 
             if (config.approved_roles.indexOf(roleID) !== -1 || interaction.member.permissions.has('MANAGE_ROLES')) {
-                await interaction.defer({ephemeral: false});
+                await interaction.deferReply({ephemeral: false});
                 interaction.options.get('target').member.roles.add(roleID)
                 .then(() => {
                     interaction.editReply({content: `_ _\n${interaction.member.displayName} gave the \`@${interaction.options.get('role').role.name}\` role to \`${target}\``, ephemeral: false});

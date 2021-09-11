@@ -2,13 +2,26 @@
   "name": "djzth-utils",
   "version": "1.0.0",
   "dependencies": {
+    "@discordjs/builders": "^0.5.0",
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "body-parser": "^1.19.0",
     "bufferutil": "^4.0.3",
-    "discord.js": "^13.0.0-dev.1dcad05.1626134620",
+    "cookie-parser": "^1.4.5",
+    "discord-api-types": "^0.22.0",
+    "discord.js": "^13.1.0",
     "easy-table": "^1.1.1",
     "erlpack": "github:discord/erlpack",
+    "express": "^4.17.1",
+    "http-errors": "^1.8.0",
+    "morgan": "^1.10.0",
+    "node-schedule": "^2.0.0",
+    "pug": "^3.0.2",
     "sqlite3": "^4.2.0",
     "toml-require": "^1.2.0",
     "utf-8-validate": "^5.0.5",
     "zlib-sync": "^0.1.7"
+  },
+  "devDependencies": {
+    "typescript": "^4.4.2"
   }
 }
