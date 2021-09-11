@@ -1,6 +1,6 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
 
-const Table = require('easy-table')
+import Table = require('easy-table')
 import {config} from "../config";
 
 
@@ -12,8 +12,8 @@ module.exports = {
     async execute(interaction) {
         const Role = interaction.options.get('role').role;
         if (config.access_control.includes(interaction.channelId)) {
-            let list = [];
-            const Members = interaction.guild.members.cache.filter(member => member.roles.cache.find(role => role == Role));
+            const list = [];
+            const Members = interaction.guild.members.cache.filter(member => member.roles.cache.find(role => role === Role));
             Members.forEach ((member)=> {
                 list.push({ "Nickname": member.nickname || member.user.username, "Discord Tag": member.user.tag});
             });

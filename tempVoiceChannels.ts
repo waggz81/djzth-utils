@@ -1,7 +1,7 @@
 import {config} from "./config";
 
-//member changed voice channels, check if we have roles assigned to them in the config
-//and assign or remove as necessary
+// member changed voice channels, check if we have roles assigned to them in the config
+// and assign or remove as necessary
 export function voiceChanged (oldchannel, newchannel) {
 
     const memberRoles = oldchannel.member.roles;

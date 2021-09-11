@@ -9,7 +9,7 @@ const job = schedule.scheduleJob(
         dayOfWeek: 2,
         tz: 'Etc/UTC'
     },
-    function(){
+    () => {
         truncateKeystones();
         console.log('Truncating keystones table from database.');
     });

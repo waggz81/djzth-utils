@@ -1,5 +1,8 @@
+// tslint:disable-next-line:no-var-requires
 require('toml-require').install();
+// tslint:disable-next-line:no-var-requires
 const configFile = require('./config.toml');
+// tslint:disable-next-line:no-var-requires
 const assert = require('assert').strict
 
 const NODE_ENV = process.env.NODE_ENV

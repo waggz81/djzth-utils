@@ -1,8 +1,8 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
 
-const Table = require('easy-table')
+import Table = require('easy-table')
 import {getKeystones} from '../db'
-const {MessageEmbed} = require("discord.js");
+import {MessageEmbed}  from "discord.js";
 
 
 module.exports = {
@@ -25,9 +25,9 @@ module.exports = {
         const min = interaction.options.getInteger('min');
         const max = interaction.options.getInteger('max');
         const dungeon = interaction.options.getString('dungeon');
-        //console.log(min, max, dungeon)
+        // console.log(min, max, dungeon)
         getKeystones(min, max, dungeon).then((rows) => {
-            let list = [];
+            const list = [];
             rows.forEach(row =>{
                 list.push({
                     "Name": row.name,
@@ -37,12 +37,12 @@ module.exports = {
             })
             list.sort((a, b) => (a.Dungeon > b.Dungeon) ? 1 : (a.Dungeon === b.Dungeon) ? ((a.Level > b.Level) ? 1 : -1) : -1 );
             // noinspection JSVoidFunctionReturnValueUsed,TypeScriptValidateJSTypes
-            let content = "```" + Table.print(list) + "```";
+            const content = "```" + Table.print(list) + "```";
             const embed = new MessageEmbed()
                 .setTitle('Keystones')
                 .setDescription(content)
             interaction.reply({content: `_ _\n`, ephemeral: true, embeds: [embed]});
-            //console.log(Table.print(rows))
+            // console.log(Table.print(rows))
         })
 
     }

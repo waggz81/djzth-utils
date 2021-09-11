@@ -11,19 +11,20 @@ myIntents.add('GUILDS', 'GUILD_PRESENCES', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES'
 
 const client = new Client({ intents: myIntents, partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 
-//augment Client to include commands collection for typescript
+// augment Client to include commands collection for typescript
 declare module "discord.js" {
     interface Client {
         commands: Collection<any, any>
     }
 }
 
-//add all commands from commands subdir
+// add all commands from commands subdir
 client.commands = new Collection();
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
+    // tslint:disable-next-line:no-var-requires
     const command = require(`./commands/${file}`);
     // Set a new item in the Collection
     // With the key as the command name and the value as the exported module
@@ -31,12 +32,12 @@ for (const file of commandFiles) {
     commands.push(command.data.toJSON());
 }
 
-//client connected and ready
+// client connected and ready
 client.once('ready', async () => {
     const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`);
     console.log("Connected to", guild.name, guild.id);
 
-    //push the slash commands
+    // push the slash commands
     const rest = new REST({ version: '9' }).setToken(config.token);
     try {
         await rest.put(
@@ -48,30 +49,30 @@ client.once('ready', async () => {
     } catch (error) {
         console.error(error);
     }
-    //load additional modules
+    // load additional modules
     require('./web');
     require('./scheduler');
 });
 
-//member changed voice channels
+// member changed voice channels
 client.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
    voiceChanged(oldVoiceState, newVoiceState);
 });
 
-//member updated presence
+// member updated presence
 client.on("presenceUpdate", (oldPresence, newPresence) => {
     if (!newPresence.activities) return;
     newPresence.activities.forEach(activity => {
         if (activity.type === "STREAMING") {
-            //console.log(`${newPresence.user.tag} is streaming at ${activity.url}.`);
+            // console.log(`${newPresence.user.tag} is streaming at ${activity.url}.`);
         }
         else {
-            //console.log("activity type", activity.type);
+            // console.log("activity type", activity.type);
         }
     });
 });
 
-//member used slash command
+// member used slash command
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
@@ -87,7 +88,7 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-//member reacted to a message
+// member reacted to a message
 client.on('messageReactionAdd', async (reaction, user) => {
     if (user.id === client.user.id) return;
     // When a reaction is received, check if the structure is partial
@@ -101,7 +102,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
             return;
         }
     }
-    let guild = await client.guilds.fetch(config.guildID);
+    const guild = await client.guilds.fetch(config.guildID);
     guild.members.fetch(user.id)
         .then ((member) =>{
             checkPendingReactions(reaction, member);
