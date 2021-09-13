@@ -1,6 +1,7 @@
 import {addRolePending} from "../db";
 import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
+import {CommandInteraction, GuildMember} from "discord.js";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -8,31 +9,29 @@ module.exports = {
         .setDescription("Add a role to a user")
         .addUserOption((option) => option.setName("target").setDescription("Select a user").setRequired(true))
         .addRoleOption((option) => option.setName("role").setDescription("Select a role").setRequired(true)),
-    async execute(interaction) {
-        console.log(interaction)
-        const target = interaction.options.get('target').user.username + '#' + interaction.options.get('target').user.discriminator;
-        const roleID = interaction.options.get('role').role.id.toString();
+    async execute(interaction : CommandInteraction) {
+        const target = interaction.options.get('target')!.user!.username + '#' + interaction.options.get('target')!.user!.discriminator;
+        const roleID = interaction.options.get('role')!.role!.id.toString();
         if (config.access_control.includes(interaction.channelId)) {
-            const targetHasRole = interaction.options.get('target').member.roles.cache.has(interaction.options.get('role').role.id);
+            const targetHasRole = (interaction.options.get('target')!.member as GuildMember).roles.cache.has(interaction.options.get('role')!.role!.id);
             if (targetHasRole) {
                 await interaction.reply({ content: "Error: the selected user already has the selected role!", ephemeral: true });
                 return;
             }
 
-            if (config.approved_roles.indexOf(roleID) !== -1 || interaction.member.permissions.has('MANAGE_ROLES')) {
+            if (config.approved_roles.indexOf(roleID) !== -1 || (interaction.member as GuildMember).permissions.has('MANAGE_ROLES')) {
                 await interaction.deferReply({ephemeral: false});
-                interaction.options.get('target').member.roles.add(roleID)
+                (interaction.options.get('target')!.member as GuildMember).roles.add(roleID)
                 .then(() => {
-                    interaction.editReply({content: `_ _\n${interaction.member.displayName} gave the \`@${interaction.options.get('role').role.name}\` role to \`${target}\``, ephemeral: false});
+                    interaction.editReply({content: `_ _\n${(interaction.member as GuildMember).displayName} gave the \`@${interaction.options.get('role')!.role!.name}\` role to \`${target}\``});
                 })
                 .catch(error =>{
                     console.error(error);
                     interaction.editReply({
                         content: `Error: ${error.name} - ${error.message}\n_ _\n` +
-                            `Role: ${interaction.options.get('role').role.name}\n` +
+                            `Role: ${interaction.options.get('role')!.role!.name}\n` +
                             `Target: ${target}\n`+
-                            `Submitter: ${interaction.member.displayName}`,
-                        ephemeral: false
+                            `Submitter: ${(interaction.member as GuildMember).displayName}`
                     });
                 })
             }
@@ -48,15 +47,15 @@ module.exports = {
     }
 };
 
-function createPendingEmbed (interaction) {
-    interaction.channel.send({
+function createPendingEmbed (interaction: CommandInteraction) {
+
+    interaction.channel!.send({
         "content": null,
             "embeds": [
             {
                 "title": "Pending Access Request",
-                "description": `${interaction.member.displayName} requests \`${interaction.options.get('target').user.username}#${interaction.options.get('target').user.discriminator}\` \
-                                be granted the \`@${interaction.options.get('role').role.name}\` role`,
-                "color": null
+                "description": `${(interaction.member as GuildMember).displayName} requests \`${interaction.options.get('target')!.user!.username}#${interaction.options.get('target')!.user!.discriminator}\` \
+                                be granted the \`@${interaction.options.get('role')!.role!.name}\` role`,
             }
         ]
     })

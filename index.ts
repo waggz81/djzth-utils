@@ -1,15 +1,16 @@
-import {Client, Collection, Intents} from "discord.js";
+import {Client, Collection, Intents, MessageReaction} from "discord.js";
 import {REST} from "@discordjs/rest";
 import {Routes} from "discord-api-types/v9";
 import * as fs from "fs";
 import {config} from "./config";
 import {checkPendingReactions} from "./db";
 import {voiceChanged} from "./tempVoiceChannels";
+import {keystonesPagination} from "./keystonesPagination";
 
 const myIntents = new Intents();
 myIntents.add('GUILDS', 'GUILD_PRESENCES', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS');
 
-const client = new Client({ intents: myIntents, partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+export const client = new Client({ intents: myIntents, partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 
 // augment Client to include commands collection for typescript
 declare module "discord.js" {
@@ -20,7 +21,7 @@ declare module "discord.js" {
 
 // add all commands from commands subdir
 client.commands = new Collection();
-const commands = [];
+const commands: any[] = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
@@ -34,21 +35,27 @@ for (const file of commandFiles) {
 
 // client connected and ready
 client.once('ready', async () => {
+    client.guilds.cache.forEach((thisGuild) => {
+        console.log("Bot joined", thisGuild.name, thisGuild.id);
+    });
     const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`);
-    console.log("Connected to", guild.name, guild.id);
+    if (guild) {
+        console.log("Designated server is", guild.name, guild.id);
 
-    // push the slash commands
-    const rest = new REST({ version: '9' }).setToken(config.token);
-    try {
-        await rest.put(
-            Routes.applicationGuildCommands(client.user.id, guild.id),
-            { body: commands },
-        );
+        // push the slash commands
+        const rest = new REST({version: '9'}).setToken(config.token);
+        try {
+            await rest.put(
+                Routes.applicationGuildCommands(client.user!.id, guild.id),
+                {body: commands},
+            );
 
-        console.log('Successfully registered application commands.');
-    } catch (error) {
-        console.error(error);
+            console.log('Successfully registered application commands.');
+        } catch (error) {
+            console.error(error);
+        }
     }
+    else console.error("Unable to connect to designated config server");
     // load additional modules
     require('./web');
     require('./scheduler');
@@ -88,9 +95,17 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+// member used button
+client.on('interactionCreate', interaction => {
+    if (!interaction.isButton()) return;
+    if (interaction.customId.startsWith("nextKeystonePage") || interaction.customId.startsWith("previousKeystonePage")) {
+        keystonesPagination(interaction).catch(console.error);
+    }
+});
+
 // member reacted to a message
 client.on('messageReactionAdd', async (reaction, user) => {
-    if (user.id === client.user.id) return;
+    if (user.id === client.user!.id) return;
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) {
         // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
@@ -105,13 +120,15 @@ client.on('messageReactionAdd', async (reaction, user) => {
     const guild = await client.guilds.fetch(config.guildID);
     guild.members.fetch(user.id)
         .then ((member) =>{
-            checkPendingReactions(reaction, member);
-        }).catch(console.error)
+            checkPendingReactions(reaction as MessageReaction, member);
+        }).catch((error) => {
+            console.error(error);
+        })
 
 });
 
 client.on("messageCreate", message => {
-    if (message.author.id === client.user.id) return;
+    if (message.author.id === client.user!.id) return;
     if (config.removeEmbeds.indexOf(message.channel.id) !== -1) {
         message.suppressEmbeds(true).catch(console.error)
     }
@@ -119,4 +136,3 @@ client.on("messageCreate", message => {
 
 client.login(config.token).catch(console.error);
 
-module.exports = config;
