@@ -123,6 +123,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
             checkPendingReactions(reaction as MessageReaction, member);
         }).catch((error) => {
             console.error(error);
+            console.log(reaction);
         })
 
 });
@@ -130,7 +131,9 @@ client.on('messageReactionAdd', async (reaction, user) => {
 client.on("messageCreate", message => {
     if (message.author.id === client.user!.id) return;
     if (config.removeEmbeds.indexOf(message.channel.id) !== -1) {
-        message.suppressEmbeds(true).catch(console.error)
+        setTimeout(() =>{
+            message.suppressEmbeds(true).catch(console.error)
+        }, 1000 * 3);
     }
 });
 

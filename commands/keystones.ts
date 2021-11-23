@@ -2,7 +2,7 @@ import {SlashCommandBuilder} from "@discordjs/builders";
 import {getKeystones} from '../db'
 import {CommandInteraction, InteractionReplyOptions, MessageActionRow, MessageButton, MessageEmbed} from "discord.js";
 import {disableButtons, keystoneInteractions} from "../keystonesPagination";
-import {KeystonelistEntry, KeystonePages} from "../typings/types";
+import {KeystoneEntry, KeystonePages} from "../typings/types";
 import {randomUUID} from "crypto";
 
 module.exports = {
@@ -28,17 +28,24 @@ module.exports = {
         const dungeon = interaction.options.getString('dungeon');
         // console.log(min, max, dungeon)
         getKeystones(min, max, dungeon).then((rows) => {
-
-            const list: KeystonelistEntry[] = [];
-            for (const key of rows) {
-                list.push({
-                    "Name": key.name,
-                    "Level": key.key_level,
-                    "Dungeon": key.dungeon_name
+            if (rows.length === 0) {
+                interaction.editReply({
+                    content: "_ _\n",
+                    embeds: [new MessageEmbed()
+                        .setTitle('Error')
+                        .setDescription('No keystones uploaded for this week')
+                        .setColor('#ff0000')
+                    ]
                 })
+                return;
             }
 
-            list.sort((a, b) => (a.Dungeon > b.Dungeon) ? 1 : (a.Dungeon === b.Dungeon) ? ((a.Level > b.Level) ? 1 : -1) : -1);
+            const list: KeystoneEntry[] = [];
+            for (const key of rows) {
+                list.push(key)
+            }
+
+            list.sort((a, b) => (a.dungeon_name > b.dungeon_name) ? 1 : (a.dungeon_name === b.dungeon_name) ? ((a.key_level > b.key_level) ? 1 : -1) : -1);
 
             keystonePageEmbed(list).then(keystonePages => {
                 let i = 1;
@@ -86,28 +93,41 @@ module.exports = {
     }
 };
 
-async function keystonePageEmbed(list: KeystonelistEntry[]) {
+async function keystonePageEmbed(list: KeystoneEntry[]) {
     const keystonePages: KeystonePages = {
         pages: 1,
         uuid: randomUUID(),
         embeds: []
     };
-    const fieldSize = 270;
+    const fieldSize = 1000;
 
-    let currentList: KeystonelistEntry[] = [];
+    const dungeonAbbr: any = {
+        "De Other Side": "DoS",
+        "Halls of Atonement": "HoA",
+        "Mists of Tirna Scithe": "Mists",
+        "Plaguefall": "PF",
+        "Sanguine Depths": "SD",
+        "Spires of Ascension": "SoA",
+        "The Necrotic Wake": "NW",
+        "Theater of Pain": "ToP"
+    }
+
+    let currentList: KeystoneEntry[] = [];
     let nameField: string = "";
     let levelField: string = "";
     let dungeonField: string = "";
     for (const entry of list) {
-        currentList.push(entry)
+        currentList.push(entry);
         nameField = currentList.reduce(
-            (previousValue, currentValue) => previousValue + currentValue.Name + "\n"
+            (previousValue, currentValue) => `${previousValue}[${currentValue.name}]` +
+                        `(https://raider.io/characters/us/${currentValue.character.split('-')[1]}/` +
+                        `${currentValue.character.split('-')[0]})\n`
             , "");
         levelField = currentList.reduce(
-            (previousValue, currentValue) => previousValue + currentValue.Level + "\n"
+            (previousValue, currentValue) => `${previousValue}${currentValue.key_level}\n`
             , "");
         dungeonField = currentList.reduce(
-            (previousValue, currentValue) => previousValue + currentValue.Dungeon + "\n"
+            (previousValue, currentValue) => `${previousValue}${dungeonAbbr[currentValue.dungeon_name]}\n`
             , "");
 
         if (nameField.length < fieldSize && dungeonField.length < fieldSize) {
@@ -118,11 +138,13 @@ async function keystonePageEmbed(list: KeystonelistEntry[]) {
                     {name: 'Level', value: levelField, inline: true},
                     {name: 'Dungeon', value: dungeonField, inline: true},
                 ]);
+            console.log(nameField)
         } else {
             currentList = [entry];
-            nameField = entry.Name;
-            levelField = entry.Level.toString();
-            dungeonField = entry.Dungeon;
+            nameField = `[${entry.name}](https://raider.io/characters/us/${entry.character.split('-')[1]}/` +
+                `${entry.character.split('-')[0]})`;
+            levelField = entry.key_level.toString();
+            dungeonField = entry.dungeon_name;
             keystonePages.pages = keystonePages.pages + 1;
         }
     }

@@ -1,8 +1,9 @@
-
 import express = require('express');
+
 const router = express.Router();
-import {uploadKeystones, getKeystones} from "../db";
-import {KeystoneEntry} from "../typings/types";
+import {uploadKeystones, getKeystones, getAuthorizedUsers} from "../db";
+import {KeystoneEntry, KeystonelistEntry} from "../typings/types";
+import {getLastReset} from "../scheduler";
 
 /*
 function rateScore (score) {
@@ -12,23 +13,24 @@ function rateScore (score) {
 
 /* GET home page. */
 router.get('/', (req, res) => {
-    // console.log(req);
-        getKeystones().then((rows) => {
-            let content = "";
-            rows.forEach((row: KeystoneEntry) => {
-                content += JSON.stringify(row) + "<br />";
-            });
-            res.send( content);
-        })
+     console.log(req.headers.host);
+     console.log(req);
+    getKeystones().then((rows) => {
+        let content = "";
+        rows.forEach((row: KeystoneEntry) => {
+            content += JSON.stringify(row) + "<br />";
+        });
+        res.send(content);
+    })
 });
 
 
-
-router.post('/upload', (req, res) => {
+router.post('/upload', async (req, res) => {
     console.log((req));
-    req.body.keystones.forEach((keystone: any) => {
-        try {
-            console.log(keystone);
+    new Promise((resolve, reject) => {
+        const valid: KeystonelistEntry[]= [];
+        req.body.keystones.forEach((keystone: any) => {
+            // console.log(keystone);
             const scores = keystone.RIOProfile.mythic_plus_scores_by_season[0].scores;
             const entry: KeystoneEntry = {
                 character: keystone.character,
@@ -46,14 +48,32 @@ router.post('/upload', (req, res) => {
                 timestamp: keystone.time_stamp,
                 uploader: req.body.user
             }
-            uploadKeystones(entry);
-        }
-        catch (error) {
-            console.error(error);
-        }
-    })
 
-    res.send("OK");
+            getAuthorizedUsers().then((authorizedUsers) => {
+                let found = false;
+                for (const user of authorizedUsers) {
+                    if (user.uuid === entry.uploader) {
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    reject("Unauthorized user token");
+                }
+                if (entry.timestamp > getLastReset()) {
+                    uploadKeystones(entry);
+                    valid.push({Name: entry.name, Level:entry.key_level, Dungeon: entry.dungeon_name });
+                }
+                else valid.push({Name: entry.name, Level:entry.key_level, Dungeon: entry.dungeon_name + " expired, not added" });
+            });
+        })
+            resolve(valid);
+
+
+    }).then((response) => {
+        res.send(response);
+    }).catch((message) => {
+        res.status(401).send({ error: message });
+    });
 });
 
 module.exports = router;

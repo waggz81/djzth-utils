@@ -194,7 +194,10 @@ export async function userLogin (userData: any) {
         // insert
         const sql2 = "INSERT INTO users (uuid, id, username, discriminator, avatar) VALUES (?, ?, ?, ?, ?)"
         db.run(sql2, [uuid, userData.id, userData.username, userData.discriminator, userData.avatar], (err:object) => {
-            if (err)console.error(err)
+            if (err){
+                console.error (err);
+                return(err);
+            }
         })
     }
     else {
@@ -203,6 +206,13 @@ export async function userLogin (userData: any) {
 
     return uuid;
 }
+
+export async function getAuthorizedUsers () {
+    const sql = "SELECT uuid,id FROM users";
+    const result = await db.query(sql, []);
+    return result.rows;
+}
 process.on('SIGINT', () => {
     db.close();
+    process.exit();
 });
