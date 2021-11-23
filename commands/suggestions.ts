@@ -10,7 +10,7 @@ for (const element of Object.entries(config.suggestionChannels)) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("suggestion")
-        .setDescription("Submit a suggestion to a leadership team. If more advanced formatting is needed submit a pastebin/google doc link.")
+        .setDescription("Submit a suggestion to a leadership team. Submit a pastebin/google doc link if necessary.")
         .addStringOption(option =>
             option.setName('team')
                 .setDescription('The leadership team to post the suggestion to')
