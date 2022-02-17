@@ -1,7 +1,7 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
 
 import Table = require('easy-table')
-import {CommandInteraction, Role} from "discord.js";
+import {CommandInteraction, MessageEmbed, Role} from "discord.js";
 
 
 module.exports = {
@@ -17,6 +17,7 @@ module.exports = {
             Members.forEach ((member)=> {
                 list.push({ "Nickname": member.nickname || member.user.username, "Discord Tag": member.user.tag});
             });
-            await interaction.reply({ content: `Users with \`@${Role.name}\`:\n\`\`\`${Table.print(list)}\`\`\``, ephemeral: true});
+            const embedResult = new MessageEmbed().setTitle(`Users with \`@${thisRole.name}\`:`).setDescription(`\`\`\`${Table.print(list)}\`\`\``); // <@&ROLE_ID>
+            await interaction.reply({ embeds: [embedResult], ephemeral: true});
     }
 };
