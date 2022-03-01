@@ -13,6 +13,7 @@
     "erlpack": "github:discord/erlpack",
     "express": "^4.17.1",
     "http-errors": "^1.8.0",
+    "json-2-csv": "^3.17.0",
     "morgan": "^1.10.0",
     "node-schedule": "^2.0.0",
     "pug": "^3.0.2",

@@ -5,7 +5,7 @@ import * as fs from "fs";
 import {config} from "./config";
 import {checkPendingReactions} from "./db";
 import {voiceChanged} from "./tempVoiceChannels";
-import {keystonesPagination} from "./keystonesPagination";
+import {EmbedPagination} from "./embedPagination";
 
 const myIntents = new Intents();
 myIntents.add('GUILDS', 'GUILD_PRESENCES', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS');
@@ -99,8 +99,8 @@ client.on('interactionCreate', async interaction => {
 // member used button
 client.on('interactionCreate', interaction => {
     if (!interaction.isButton()) return;
-    if (interaction.customId.startsWith("nextKeystonePage") || interaction.customId.startsWith("previousKeystonePage")) {
-        keystonesPagination(interaction).catch(console.error);
+    if (interaction.customId.startsWith("nextEmbedPage") || interaction.customId.startsWith("previousEmbedPage")) {
+        EmbedPagination(interaction).catch(console.error);
     }
 });
 

@@ -1,7 +1,9 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
 
 import Table = require('easy-table')
-import {CommandInteraction, MessageEmbed, Role} from "discord.js";
+import {CommandInteraction, GuildMember, MessageEmbed, Role} from "discord.js";
+import {EmbedPages} from "../typings/types";
+import {randomUUID} from "crypto";
 
 
 module.exports = {
@@ -21,3 +23,50 @@ module.exports = {
             await interaction.reply({ embeds: [embedResult], ephemeral: true});
     }
 };
+
+async function RoleListPageEmbed(list: GuildMember[]) {
+    const roleListPages: EmbedPages = {
+        pages: 1,
+        uuid: randomUUID(),
+        embeds: []
+    };
+    const fieldSize = 1000;
+
+
+ //   let currentList: RoleListEntry[] = [];
+    let nameField: string = "";
+    let idField: string = "";
+    for (const entry of list) {
+ //       currentList.push({Name: entry.displayName, ID: entry.id});
+        nameField = entry.displayName;
+        idField = entry.id;
+
+        if (nameField.length < fieldSize && idField.length < fieldSize) {
+            roleListPages.embeds[roleListPages.pages - 1] = new MessageEmbed()
+                .setTitle('Users with Role')
+                .setFields([
+                    {name: 'Name', value: nameField, inline: true},
+                    {name: 'Discord ID', value: idField, inline: true},
+                ]);
+        } else {
+  //         currentList = [{Name: entry.displayName, ID: entry.id}];
+            nameField = entry.displayName;
+            idField = entry.id;
+            roleListPages.pages = roleListPages.pages + 1;
+        }
+    }
+
+    if (roleListPages.embeds.length !== roleListPages.pages) // we missed the last entry on a new page, add it
+    {
+        const embed = new MessageEmbed()
+            .setTitle('Users with Role')
+            .setFields([
+                {name: 'Name', value: nameField, inline: true},
+                {name: 'Discord ID', value: idField, inline: true},
+            ])
+        roleListPages.embeds.push(embed as MessageEmbed);
+    }
+
+    return roleListPages;
+
+}

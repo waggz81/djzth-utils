@@ -23,8 +23,13 @@ type KeystonelistEntry = {
     Dungeon: string;
 }
 
-type KeystonePages = {
+type EmbedPages = {
     uuid: string,
     pages: number,
     embeds: MessageEmbed[]
+}
+
+type RoleListEntry = {
+    Name: string;
+    ID: string;
 }

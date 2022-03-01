@@ -1,8 +1,8 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
 import {getKeystones} from '../db'
 import {CommandInteraction, InteractionReplyOptions, MessageActionRow, MessageButton, MessageEmbed} from "discord.js";
-import {disableButtons, keystoneInteractions} from "../keystonesPagination";
-import {KeystoneEntry, KeystonePages} from "../typings/types";
+import {disableButtons, embedInteractions} from "../embedPagination";
+import {KeystoneEntry, EmbedPages} from "../typings/types";
 import {randomUUID} from "crypto";
 
 module.exports = {
@@ -54,7 +54,7 @@ module.exports = {
                     i++;
                 }
 
-                keystoneInteractions.push(keystonePages);
+                embedInteractions.push(keystonePages);
                 console.log("pages", keystonePages);
 
                 const row: MessageActionRow = new MessageActionRow();
@@ -66,14 +66,14 @@ module.exports = {
                 if (keystonePages.pages > 1) {
                     row.addComponents(
                         new MessageButton()
-                            .setCustomId(`previousKeystonePage:${keystonePages.uuid}:0`)
+                            .setCustomId(`previousEmbedPage:${keystonePages.uuid}:0`)
                             .setLabel('<')
                             .setStyle('PRIMARY')
                             .setDisabled(true)
                     );
                     row.addComponents(
                         new MessageButton()
-                            .setCustomId(`nextKeystonePage:${keystonePages.uuid}:1`)
+                            .setCustomId(`nextEmbedPage:${keystonePages.uuid}:1`)
                             .setLabel('>')
                             .setStyle('PRIMARY')
                     );
@@ -94,7 +94,7 @@ module.exports = {
 };
 
 async function keystonePageEmbed(list: KeystoneEntry[]) {
-    const keystonePages: KeystonePages = {
+    const keystonePages: EmbedPages = {
         pages: 1,
         uuid: randomUUID(),
         embeds: []
