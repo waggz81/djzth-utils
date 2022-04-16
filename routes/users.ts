@@ -45,7 +45,7 @@ router.get('/', async (request, response) => {
 
     }
     const host = (request.headers.host);
-    return response.redirect(`https://discord.com/api/oauth2/authorize?client_id=212273476419977216&redirect_uri=http%3A%2F%2F${host}%2Fusers&response_type=code&scope=identify`);
+    return response.redirect(`https://discord.com/api/oauth2/authorize?client_id=${config.clientID}&redirect_uri=http%3A%2F%2F${host}%2Fusers&response_type=code&scope=identify`);
 });
 
 async function getDiscordUser (token: string) {
