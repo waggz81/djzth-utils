@@ -20,6 +20,8 @@ module.exports = {
             .addChoice("Spires of Ascension", "Spires of Ascension")
             .addChoice("The Necrotic Wake", "The Necrotic Wake")
             .addChoice("Theater of Pain", "Theater of Pain")
+            .addChoice("Streets of Wonder", "Streets of Wonder")
+            .addChoice("So'leah's Gambit", "So'leah's Gambit")
         ),
     async execute(interaction: CommandInteraction) {
         await interaction.deferReply({ ephemeral: true });
@@ -109,7 +111,9 @@ async function keystonePageEmbed(list: KeystoneEntry[]) {
         "Sanguine Depths": "SD",
         "Spires of Ascension": "SoA",
         "The Necrotic Wake": "NW",
-        "Theater of Pain": "ToP"
+        "Theater of Pain": "ToP",
+        "Streets of Wonder": "Streets",
+        "So'leah's Gambit": "Gambit"
     }
 
     let currentList: KeystoneEntry[] = [];
