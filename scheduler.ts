@@ -1,6 +1,7 @@
 import {truncateKeystones} from "./db";
 
 import schedule = require('node-schedule');
+import {dadjoke} from "./dadjoke";
 
 
 // returns epoch time of last server reset
@@ -18,6 +19,7 @@ export function getLastReset (current: Date = new Date()) {
 
 // schedule a truncate job for each weekly reset
 const job = schedule.scheduleJob(
+    "truncateKeystones",
     {
         minute: 1,
         hour: 15,
@@ -34,4 +36,16 @@ truncateKeystones(getLastReset());
 // truncateKeystones(1631500156);
 console.log("Scheduled job ", job.name)
 
+const dadjokejob = schedule.scheduleJob(
+    "dadjokes",
+    {
+        hour: 13,
+        minute: 15,
+        tz: 'Etc/UTC'
+    },
+    () => {
+        dadjoke().then();
+    }
+)
+console.log("Scheduled job ", dadjokejob.name)
 

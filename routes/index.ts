@@ -59,6 +59,7 @@ router.post('/upload', async (req, res) => {
                 if (!found) {
                     reject("Unauthorized user token");
                 }
+                console.log("last reset = ", getLastReset(), "timestamp = ", entry.timestamp);
                 if (entry.timestamp > getLastReset()) {
                     uploadKeystones(entry);
                     valid.push({Name: entry.name, Level:entry.key_level, Dungeon: entry.dungeon_name });
