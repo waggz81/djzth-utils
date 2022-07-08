@@ -44,7 +44,7 @@ const dadjokejob = schedule.scheduleJob(
         tz: 'Etc/UTC'
     },
     () => {
-        dadjoke().then();
+        dadjoke().catch(console.error);
     }
 )
 console.log("Scheduled job ", dadjokejob.name)

@@ -35,7 +35,9 @@ export async function dadjoke() {
             joke = JSON.parse(body.toString()).body[0];
             console.log(joke)
             // @ts-ignore
-            channel.send(`${joke.setup} \n ||${joke.punchline}||`);
+            channel.send(joke.setup)
+            // @ts-ignore
+            channel.send(`||${joke.punchline}||`);
         });
     });
 
