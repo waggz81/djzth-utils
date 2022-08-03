@@ -112,8 +112,14 @@ async function keystonePageEmbed(list: KeystoneEntry[]) {
         "Spires of Ascension": "SoA",
         "The Necrotic Wake": "NW",
         "Theater of Pain": "ToP",
-        "Streets of Wonder": "Streets",
-        "So'leah's Gambit": "Gambit"
+        "Streets of Wonder": "STRT",
+        "So'leah's Gambit": "GMBT",
+        "Iron Docks": "ID",
+        "Grimrail Depot": "GD",
+        "Lower Karazhan": "LOWR",
+        "Upper Karazhan": "UPPR",
+        "Mechagon Workshop": "WORK",
+        "Mechagon Junkyard": "YARD"
     }
 
     let currentList: KeystoneEntry[] = [];
