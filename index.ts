@@ -130,11 +130,23 @@ client.on('messageReactionAdd', async (reaction, user) => {
 });
 
 client.on("messageCreate", message => {
-    if (message.author.id === client.user!.id) return;
+    if (message.author.id === client.user!.id || message.channel.isThread()) return;
     if (config.removeEmbeds.indexOf(message.channel.id) !== -1) {
         setTimeout(() =>{
             message.suppressEmbeds(true).catch(console.error)
         }, 1000 * 3);
+    }
+});
+
+client.on("threadCreate", thread => {
+    const forums = config.forum_post_auto_mention_roles;
+    console.log(thread);
+    console.log(thread.parentId);
+    if (thread.parentId) {
+        console.log(forums[thread.parentId])
+        if (forums[thread.parentId]) {
+            thread.send(forums[thread.parentId]);
+        }
     }
 });
 
