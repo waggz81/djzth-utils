@@ -1,4 +1,4 @@
-import {Client, Collection, Intents, MessageReaction} from "discord.js";
+import {Client, Collection, Guild, Intents, Message, MessageReaction, TextChannel} from "discord.js";
 import {REST} from "@discordjs/rest";
 import {Routes} from "discord-api-types/v9";
 import * as fs from "fs";
@@ -11,7 +11,8 @@ const myIntents = new Intents();
 myIntents.add('GUILDS', 'GUILD_PRESENCES', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS');
 
 export const client = new Client({ intents: myIntents, partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
-
+export let raidTeamInfoPosts: Message[] = [];
+export let raidTeamInfoChannel: TextChannel;
 // augment Client to include commands collection for typescript
 declare module "discord.js" {
     interface Client {
@@ -21,17 +22,9 @@ declare module "discord.js" {
 
 // add all commands from commands subdir
 client.commands = new Collection();
-const commands: any[] = [];
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+export let commands: any[] = [];
 
-for (const file of commandFiles) {
-    // tslint:disable-next-line:no-var-requires
-    const command = require(`./commands/${file}`);
-    // Set a new item in the Collection
-    // With the key as the command name and the value as the exported module
-    client.commands.set(command.data.name, command);
-    commands.push(command.data.toJSON());
-}
+
 
 // client connected and ready
 client.once('ready', async () => {
@@ -42,18 +35,7 @@ client.once('ready', async () => {
     if (guild) {
         console.log("Designated server is", guild.name, guild.id);
 
-        // push the slash commands
-        const rest = new REST({version: '9'}).setToken(config.token);
-        try {
-            await rest.put(
-                Routes.applicationGuildCommands(client.user!.id, guild.id),
-                {body: commands},
-            );
-
-            console.log('Successfully registered application commands.');
-        } catch (error) {
-            console.error(error);
-        }
+        await refreshCommands(guild, false);
     }
     else console.error("Unable to connect to designated config server");
     // load additional modules
@@ -152,3 +134,55 @@ client.on("threadCreate", thread => {
 
 client.login(config.token).catch(console.error);
 
+export async function refreshCommands(guild:Guild, forcedRefresh:boolean) {
+    raidTeamInfoChannel = client.channels.cache.get(config.raidteaminfochannel) as TextChannel;
+    const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+    raidTeamInfoPosts = [];
+    if (forcedRefresh) {
+        commands = commands.filter(element => {
+            return element.name === "refreshcommands"
+        })
+    }
+    raidTeamInfoChannel.messages.fetch({ limit: 100 }).then(messages => {
+
+        // Iterate through the messages here with the variable "messages".
+        messages.forEach(message => {
+            raidTeamInfoPosts.push(message);
+        });
+
+        for (const file of commandFiles) {
+            const command = requireUncached(`./commands/${file}`);
+
+            if (forcedRefresh && command.data.name === "refreshcommands") {
+                continue;
+            }
+
+            // Set a new item in the Collection
+            // With the key as the command name and the value as the exported module
+            client.commands.set(command.data.name, command);
+            commands.push(command.data.toJSON());
+        }
+    }).then(() => {
+        // push the slash commands
+        const rest = new REST({version: '9'}).setToken(config.token);
+        try {
+            rest.put(
+                Routes.applicationGuildCommands(client.user!.id, guild.id),
+                {body: commands},
+            );
+
+            console.log('Successfully registered application commands.');
+        } catch (error) {
+            console.error(error);
+        }
+    })
+
+
+
+
+}
+
+function requireUncached(module:any) {
+    delete require.cache[require.resolve(module)];
+    return require(module);
+}
