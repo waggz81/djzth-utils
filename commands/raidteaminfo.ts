@@ -1,6 +1,7 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
 import {CommandInteraction, Message, MessageEmbed} from "discord.js";
 import {raidTeamInfoChannel, raidTeamInfoPosts} from "../index";
+import {config} from "../config";
 
 
 const choices: (string | null)[][] = [];
@@ -83,75 +84,80 @@ module.exports = {
         ),
 
     async execute(interaction: CommandInteraction) {
-        const submission = interaction.options.data[0];
-        if (submission.name === "new") {
-            console.log("new");
-            const embed = new MessageEmbed()
-                .setTitle(interaction.options.get('teamname')?.value as string)
-                .setDescription(interaction.options.get('description')?.value as string)
-                .addFields(
-                    {
-                        name: 'Schedule',
-                        value: interaction.options.get('schedule')?.value as string
-                    },
-                    {
-                        name: 'Current Progression',
-                        value: interaction.options.get('progression')?.value as string
-                    },
-                    {
-                        name: 'Recruitment Contacts',
-                        value: interaction.options.get('contacts')?.value as string
-                    },
-                    {
-                        name: 'Requirements',
-                        value: interaction.options.get('requirements')?.value as string
-                    },
-                    {
-                        name: 'Currently Recruiting',
-                        value: interaction.options.get('currentneeds')?.value as string
-                    },
-                )
-                .setFooter({text: "Last Updated by " + interaction.user.tag})
-                .setTimestamp(Date.now())
+        if (config.raidteaminfochannel.includes(interaction.channelId)) {
+            const submission = interaction.options.data[0];
+            if (submission.name === "new") {
+                console.log("new");
+                const embed = new MessageEmbed()
+                    .setTitle(interaction.options.get('teamname')?.value as string)
+                    .setDescription(interaction.options.get('description')?.value as string)
+                    .addFields(
+                        {
+                            name: 'Schedule',
+                            value: interaction.options.get('schedule')?.value as string
+                        },
+                        {
+                            name: 'Current Progression',
+                            value: interaction.options.get('progression')?.value as string
+                        },
+                        {
+                            name: 'Recruitment Contacts',
+                            value: interaction.options.get('contacts')?.value as string
+                        },
+                        {
+                            name: 'Requirements',
+                            value: interaction.options.get('requirements')?.value as string
+                        },
+                        {
+                            name: 'Currently Recruiting',
+                            value: interaction.options.get('currentneeds')?.value as string
+                        },
+                    )
+                    .setFooter({text: "Last Updated by " + interaction.user.tag})
+                    .setTimestamp(Date.now())
 
-            await raidTeamInfoChannel.send({embeds: [embed]})
+                await raidTeamInfoChannel.send({embeds: [embed]})
 
-        } else {
-            console.log("edit");
-            raidTeamInfoChannel.messages.fetch(interaction.options.get('teamname')?.value as string)
-                .then(message => {
-                    console.log(message)
-                    const embed = new MessageEmbed()
-                        .setTitle(message.embeds[0].title as string)
-                        .setDescription(interaction.options.get('description')?.value as string || message.embeds[0].description as string)
-                        .addFields(
-                            {
-                                name: 'Schedule',
-                                value: interaction.options.get('schedule')?.value as string || message.embeds[0].fields[0].value
-                            },
-                            {
-                                name: 'Current Progression',
-                                value: interaction.options.get('progression')?.value as string || message.embeds[0].fields[1].value
-                            },
-                            {
-                                name: 'Recruitment Contacts',
-                                value: interaction.options.get('contacts')?.value as string || message.embeds[0].fields[2].value
-                            },
-                            {
-                                name: 'Requirements',
-                                value: interaction.options.get('requirements')?.value as string || message.embeds[0].fields[3].value
-                            },
-                            {
-                                name: 'Currently Recruiting',
-                                value: interaction.options.get('currentneeds')?.value as string || message.embeds[0].fields[4].value
-                            },
-                        )
-                        .setFooter({text: "Last Updated by " + interaction.user.tag})
-                        .setTimestamp(Date.now())
-                    message.edit({embeds: [embed]})
-                })
+            } else {
+                console.log("edit");
+                raidTeamInfoChannel.messages.fetch(interaction.options.get('teamname')?.value as string)
+                    .then(message => {
+                        console.log(message)
+                        const embed = new MessageEmbed()
+                            .setTitle(message.embeds[0].title as string)
+                            .setDescription(interaction.options.get('description')?.value as string || message.embeds[0].description as string)
+                            .addFields(
+                                {
+                                    name: 'Schedule',
+                                    value: interaction.options.get('schedule')?.value as string || message.embeds[0].fields[0].value
+                                },
+                                {
+                                    name: 'Current Progression',
+                                    value: interaction.options.get('progression')?.value as string || message.embeds[0].fields[1].value
+                                },
+                                {
+                                    name: 'Recruitment Contacts',
+                                    value: interaction.options.get('contacts')?.value as string || message.embeds[0].fields[2].value
+                                },
+                                {
+                                    name: 'Requirements',
+                                    value: interaction.options.get('requirements')?.value as string || message.embeds[0].fields[3].value
+                                },
+                                {
+                                    name: 'Currently Recruiting',
+                                    value: interaction.options.get('currentneeds')?.value as string || message.embeds[0].fields[4].value
+                                },
+                            )
+                            .setFooter({text: "Last Updated by " + interaction.user.tag})
+                            .setTimestamp(Date.now())
+                        message.edit({embeds: [embed]})
+                    })
+            }
+
+            await interaction.reply({content: 'Done!', ephemeral: true});
         }
-
-        await interaction.reply({content: 'Done!', ephemeral: true});
+        else {
+            await interaction.reply({ content: "Command disabled in this channel", ephemeral: true });
+        }
     }
 };
