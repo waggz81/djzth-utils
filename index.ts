@@ -127,7 +127,8 @@ client.on("threadCreate", thread => {
     if (thread.parentId) {
         console.log(forums[thread.parentId])
         if (forums[thread.parentId]) {
-            thread.send(forums[thread.parentId]);
+            thread.send(forums[thread.parentId]).catch(err => { console.log(err)})
+            thread.setAutoArchiveDuration("MAX").catch(err => { console.log(err)})
         }
     }
 });
