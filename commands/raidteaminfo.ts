@@ -181,6 +181,7 @@ module.exports = {
                                     )
                                     .setFooter({text: "Last Updated by " + member.displayName})
                                     .setTimestamp(Date.now())
+                                    .setThumbnail(message.embeds[0].thumbnail?.url || '')
                                 message.edit({embeds: [embed]})
                             })
                     }
