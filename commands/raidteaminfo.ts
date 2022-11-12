@@ -1,5 +1,5 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, Message, MessageEmbed} from "discord.js";
+import {CommandInteraction, GuildMember, Message, MessageEmbed} from "discord.js";
 import {raidTeamInfoChannel, raidTeamInfoPosts} from "../index";
 import {config} from "../config";
 
@@ -49,16 +49,7 @@ module.exports = {
                     .addStringOption(option =>
                         option.setName('description')
                             .setDescription("Enter a short description of the team/goals")
-                            .setRequired(false))
-            /*.addStringOption(option =>
-                option.setName('game')
-                    .setDescription('game')
-                    .setRequired(false)
-                    .addChoices([
-                        ['Retail', 'retail' ],
-                        ['Classic', 'classic' ],
-                        ['FFXIV', 'ffxiv' ],
-                    ]))*/)
+                            .setRequired(false)))
 
         .addSubcommand(subcommand =>
             subcommand
@@ -97,103 +88,107 @@ module.exports = {
                         .setDescription('game')
                         .setRequired(true)
                         .addChoices([
-                            ['Retail', 'retail' ],
-                            ['Classic', 'classic' ],
-                            ['FFXIV', 'ffxiv' ],
+                            ['Retail', 'retail'],
+                            ['Classic', 'classic'],
+                            ['FFXIV', 'ffxiv'],
                         ]))
         ),
 
     async execute(interaction: CommandInteraction) {
         if (config.raidteaminfochannel.includes(interaction.channelId)) {
-            const submission = interaction.options.data[0];
-            let thumbnail;
-            switch (interaction.options.get('game')?.value as string) {
-                case 'retail':
-                    thumbnail = 'https://i.imgur.com/8jYTKiX.png';
-                    break;
-                case 'classic':
-                    thumbnail = 'https://i.imgur.com/cJdv6dH.png';
-                    break;
-                case 'ffxiv':
-                    thumbnail = 'https://i.imgur.com/7gkXva9.png';
-                    break;
-                default:
-                    thumbnail = '';
-            }
+            let member: GuildMember;
+            interaction.guild?.members.fetch(interaction.user.id)
+                .then((res) => {
+                    member = res;
+                    const submission = interaction.options.data[0];
+                    let thumbnail;
+                    switch (interaction.options.get('game')?.value as string) {
+                        case 'retail':
+                            thumbnail = 'https://i.imgur.com/8jYTKiX.png';
+                            break;
+                        case 'classic':
+                            thumbnail = 'https://i.imgur.com/cJdv6dH.png';
+                            break;
+                        case 'ffxiv':
+                            thumbnail = 'https://i.imgur.com/7gkXva9.png';
+                            break;
+                        default:
+                            thumbnail = '';
+                    }
 
-            if (submission.name === "new") {
-                console.log("new");
-                const embed = new MessageEmbed()
-                    .setTitle(interaction.options.get('teamname')?.value as string)
-                    .setDescription(interaction.options.get('description')?.value as string)
-                    .addFields(
-                        {
-                            name: 'Schedule',
-                            value: interaction.options.get('schedule')?.value as string
-                        },
-                        {
-                            name: 'Current Progression',
-                            value: interaction.options.get('progression')?.value as string
-                        },
-                        {
-                            name: 'Recruitment Contacts',
-                            value: interaction.options.get('contacts')?.value as string
-                        },
-                        {
-                            name: 'Requirements',
-                            value: interaction.options.get('requirements')?.value as string
-                        },
-                        {
-                            name: 'Currently Recruiting',
-                            value: interaction.options.get('currentneeds')?.value as string
-                        },
-                    )
-                    .setFooter({text: "Last Updated by " + interaction.user.tag})
-                    .setTimestamp(Date.now())
-                    .setThumbnail(thumbnail)
-
-                await raidTeamInfoChannel.send({embeds: [embed]})
-
-            } else {
-                console.log("edit");
-                raidTeamInfoChannel.messages.fetch(interaction.options.get('teamname')?.value as string)
-                    .then(message => {
-                        console.log(message)
+                    if (submission.name === "new") {
+                        console.log("new");
                         const embed = new MessageEmbed()
-                            .setTitle(message.embeds[0].title as string)
-                            .setDescription(interaction.options.get('description')?.value as string || message.embeds[0].description as string)
+                            .setTitle(interaction.options.get('teamname')?.value as string)
+                            .setDescription(interaction.options.get('description')?.value as string)
                             .addFields(
                                 {
                                     name: 'Schedule',
-                                    value: interaction.options.get('schedule')?.value as string || message.embeds[0].fields[0].value
+                                    value: interaction.options.get('schedule')?.value as string
                                 },
                                 {
                                     name: 'Current Progression',
-                                    value: interaction.options.get('progression')?.value as string || message.embeds[0].fields[1].value
+                                    value: interaction.options.get('progression')?.value as string
                                 },
                                 {
                                     name: 'Recruitment Contacts',
-                                    value: interaction.options.get('contacts')?.value as string || message.embeds[0].fields[2].value
+                                    value: interaction.options.get('contacts')?.value as string
                                 },
                                 {
                                     name: 'Requirements',
-                                    value: interaction.options.get('requirements')?.value as string || message.embeds[0].fields[3].value
+                                    value: interaction.options.get('requirements')?.value as string
                                 },
                                 {
                                     name: 'Currently Recruiting',
-                                    value: interaction.options.get('currentneeds')?.value as string || message.embeds[0].fields[4].value
+                                    value: interaction.options.get('currentneeds')?.value as string
                                 },
                             )
-                            .setFooter({text: "Last Updated by " + interaction.user.tag})
+                            .setFooter({text: "Last Updated by " + member.displayName})
                             .setTimestamp(Date.now())
-                        message.edit({embeds: [embed]})
-                    })
-            }
+                            .setThumbnail(thumbnail)
 
-            await interaction.reply({content: 'Done!', ephemeral: true});
-        }
-        else {
-            await interaction.reply({ content: "Command disabled in this channel", ephemeral: true });
+                        raidTeamInfoChannel.send({embeds: [embed]})
+
+                    } else {
+                        console.log("edit");
+                        raidTeamInfoChannel.messages.fetch(interaction.options.get('teamname')?.value as string)
+                            .then(message => {
+                                console.log(message)
+                                const embed = new MessageEmbed()
+                                    .setTitle(message.embeds[0].title as string)
+                                    .setDescription(interaction.options.get('description')?.value as string || message.embeds[0].description as string)
+                                    .addFields(
+                                        {
+                                            name: 'Schedule',
+                                            value: interaction.options.get('schedule')?.value as string || message.embeds[0].fields[0].value
+                                        },
+                                        {
+                                            name: 'Current Progression',
+                                            value: interaction.options.get('progression')?.value as string || message.embeds[0].fields[1].value
+                                        },
+                                        {
+                                            name: 'Recruitment Contacts',
+                                            value: interaction.options.get('contacts')?.value as string || message.embeds[0].fields[2].value
+                                        },
+                                        {
+                                            name: 'Requirements',
+                                            value: interaction.options.get('requirements')?.value as string || message.embeds[0].fields[3].value
+                                        },
+                                        {
+                                            name: 'Currently Recruiting',
+                                            value: interaction.options.get('currentneeds')?.value as string || message.embeds[0].fields[4].value
+                                        },
+                                    )
+                                    .setFooter({text: "Last Updated by " + member.displayName})
+                                    .setTimestamp(Date.now())
+                                message.edit({embeds: [embed]})
+                            })
+                    }
+
+                    interaction.reply({content: 'Done!', ephemeral: true});
+                })
+        } else {
+            await interaction.reply({content: "Command disabled in this channel", ephemeral: true});
         }
     }
 };
