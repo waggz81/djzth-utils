@@ -17,39 +17,48 @@ module.exports = {
         .setName("raidteaminfo")
         .setDescription("Update Raid Team Info Embeds")
         .addSubcommand(subcommand =>
-                subcommand
-                    .setName('edit')
-                    .setDescription('Edit an existing raid team info embed')
-                    .addStringOption(option =>
-                        option.setName('teamname')
-                            .setDescription('Raid Team Name')
-                            .setRequired(true)
-                            // @ts-ignore
-                            .addChoices(choices))
-                    .addStringOption(option =>
-                        option.setName('schedule')
-                            .setDescription("What is the raid team's schedule?")
-                            .setRequired(false))
-                    .addStringOption(option =>
-                        option.setName('progression')
-                            .setDescription("What is the raid team's current progression?")
-                            .setRequired(false))
-                    .addStringOption(option =>
-                        option.setName('requirements')
-                            .setDescription("What are the requirements to be a team member?")
-                            .setRequired(false))
-                    .addStringOption(option =>
-                        option.setName('contacts')
-                            .setDescription("Who should be contacted for recruitment?")
-                            .setRequired(false))
-                    .addStringOption(option =>
-                        option.setName('currentneeds')
-                            .setDescription("What roles or classes is the team in need of?")
-                            .setRequired(false))
-                    .addStringOption(option =>
-                        option.setName('description')
-                            .setDescription("Enter a short description of the team/goals")
-                            .setRequired(false)))
+            subcommand
+                .setName('edit')
+                .setDescription('Edit an existing raid team info embed')
+                .addStringOption(option =>
+                    option.setName('teamname')
+                        .setDescription('Raid Team Name')
+                        .setRequired(true)
+                        // @ts-ignore
+                        .addChoices(choices))
+                .addStringOption(option =>
+                    option.setName('schedule')
+                        .setDescription("What is the raid team's schedule?")
+                        .setRequired(false))
+                .addStringOption(option =>
+                    option.setName('progression')
+                        .setDescription("What is the raid team's current progression?")
+                        .setRequired(false))
+                .addStringOption(option =>
+                    option.setName('requirements')
+                        .setDescription("What are the requirements to be a team member?")
+                        .setRequired(false))
+                .addStringOption(option =>
+                    option.setName('contacts')
+                        .setDescription("Who should be contacted for recruitment?")
+                        .setRequired(false))
+                .addStringOption(option =>
+                    option.setName('currentneeds')
+                        .setDescription("What roles or classes is the team in need of?")
+                        .setRequired(false))
+                .addStringOption(option =>
+                    option.setName('description')
+                        .setDescription("Enter a short description of the team/goals")
+                        .setRequired(false))
+                .addStringOption(option =>
+                    option.setName('game')
+                        .setDescription('game')
+                        .setRequired(false)
+                        .addChoices([
+                            ['Retail', 'retail'],
+                            ['Classic', 'classic'],
+                            ['FFXIV', 'ffxiv']
+                        ])))
 
         .addSubcommand(subcommand =>
             subcommand
@@ -90,7 +99,7 @@ module.exports = {
                         .addChoices([
                             ['Retail', 'retail'],
                             ['Classic', 'classic'],
-                            ['FFXIV', 'ffxiv'],
+                            ['FFXIV', 'ffxiv']
                         ]))
         ),
 
@@ -101,7 +110,7 @@ module.exports = {
                 .then((res) => {
                     member = res;
                     const submission = interaction.options.data[0];
-                    let thumbnail;
+                    let thumbnail: string;
                     switch (interaction.options.get('game')?.value as string) {
                         case 'retail':
                             thumbnail = 'https://i.imgur.com/8jYTKiX.png';
@@ -181,7 +190,7 @@ module.exports = {
                                     )
                                     .setFooter({text: "Last Updated by " + member.displayName})
                                     .setTimestamp(Date.now())
-                                    .setThumbnail(message.embeds[0].thumbnail?.url || '')
+                                    .setThumbnail(thumbnail || message.embeds[0].thumbnail?.url || '')
                                 message.edit({embeds: [embed]})
                             })
                     }
