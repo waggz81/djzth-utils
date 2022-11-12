@@ -7,7 +7,9 @@ import {config} from "../config";
 const choices: (string | null)[][] = [];
 raidTeamInfoPosts.forEach(post => {
     // console.log(post.embeds[0].title)
-    choices.push([post.embeds[0].title, post.id])
+    if (post.embeds[0]) {
+        choices.push([post.embeds[0].title, post.id])
+    }
 })
 
 module.exports = {
@@ -15,39 +17,48 @@ module.exports = {
         .setName("raidteaminfo")
         .setDescription("Update Raid Team Info Embeds")
         .addSubcommand(subcommand =>
-            subcommand
-                .setName('edit')
-                .setDescription('Edit an existing raid team info embed')
-                .addStringOption(option =>
-                    option.setName('teamname')
-                        .setDescription('Raid Team Name')
-                        .setRequired(true)
-                        // @ts-ignore
-                        .addChoices(choices))
-                .addStringOption(option =>
-                    option.setName('schedule')
-                        .setDescription("What is the raid team's schedule?")
-                        .setRequired(false))
-                .addStringOption(option =>
-                    option.setName('progression')
-                        .setDescription("What is the raid team's current progression?")
-                        .setRequired(false))
-                .addStringOption(option =>
-                    option.setName('requirements')
-                        .setDescription("What are the requirements to be a team member?")
-                        .setRequired(false))
-                .addStringOption(option =>
-                    option.setName('contacts')
-                        .setDescription("Who should be contacted for recruitment?")
-                        .setRequired(false))
-                .addStringOption(option =>
-                    option.setName('currentneeds')
-                        .setDescription("What roles or classes is the team in need of?")
-                        .setRequired(false))
-                .addStringOption(option =>
-                    option.setName('description')
-                        .setDescription("Enter a short description of the team/goals")
-                        .setRequired(false)))
+                subcommand
+                    .setName('edit')
+                    .setDescription('Edit an existing raid team info embed')
+                    .addStringOption(option =>
+                        option.setName('teamname')
+                            .setDescription('Raid Team Name')
+                            .setRequired(true)
+                            // @ts-ignore
+                            .addChoices(choices))
+                    .addStringOption(option =>
+                        option.setName('schedule')
+                            .setDescription("What is the raid team's schedule?")
+                            .setRequired(false))
+                    .addStringOption(option =>
+                        option.setName('progression')
+                            .setDescription("What is the raid team's current progression?")
+                            .setRequired(false))
+                    .addStringOption(option =>
+                        option.setName('requirements')
+                            .setDescription("What are the requirements to be a team member?")
+                            .setRequired(false))
+                    .addStringOption(option =>
+                        option.setName('contacts')
+                            .setDescription("Who should be contacted for recruitment?")
+                            .setRequired(false))
+                    .addStringOption(option =>
+                        option.setName('currentneeds')
+                            .setDescription("What roles or classes is the team in need of?")
+                            .setRequired(false))
+                    .addStringOption(option =>
+                        option.setName('description')
+                            .setDescription("Enter a short description of the team/goals")
+                            .setRequired(false))
+            /*.addStringOption(option =>
+                option.setName('game')
+                    .setDescription('game')
+                    .setRequired(false)
+                    .addChoices([
+                        ['Retail', 'retail' ],
+                        ['Classic', 'classic' ],
+                        ['FFXIV', 'ffxiv' ],
+                    ]))*/)
 
         .addSubcommand(subcommand =>
             subcommand
@@ -81,11 +92,35 @@ module.exports = {
                     option.setName('description')
                         .setDescription("Enter a short description of the team/goals")
                         .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('game')
+                        .setDescription('game')
+                        .setRequired(true)
+                        .addChoices([
+                            ['Retail', 'retail' ],
+                            ['Classic', 'classic' ],
+                            ['FFXIV', 'ffxiv' ],
+                        ]))
         ),
 
     async execute(interaction: CommandInteraction) {
         if (config.raidteaminfochannel.includes(interaction.channelId)) {
             const submission = interaction.options.data[0];
+            let thumbnail;
+            switch (interaction.options.get('game')?.value as string) {
+                case 'retail':
+                    thumbnail = 'https://i.imgur.com/8jYTKiX.png';
+                    break;
+                case 'classic':
+                    thumbnail = 'https://i.imgur.com/cJdv6dH.png';
+                    break;
+                case 'ffxiv':
+                    thumbnail = 'https://i.imgur.com/7gkXva9.png';
+                    break;
+                default:
+                    thumbnail = '';
+            }
+
             if (submission.name === "new") {
                 console.log("new");
                 const embed = new MessageEmbed()
@@ -115,6 +150,7 @@ module.exports = {
                     )
                     .setFooter({text: "Last Updated by " + interaction.user.tag})
                     .setTimestamp(Date.now())
+                    .setThumbnail(thumbnail)
 
                 await raidTeamInfoChannel.send({embeds: [embed]})
 
