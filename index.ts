@@ -4,7 +4,6 @@ import {Routes} from "discord-api-types/v9";
 import * as fs from "fs";
 import {config} from "./config";
 import {checkPendingReactions} from "./db";
-import {voiceChanged} from "./tempVoiceChannels";
 import {EmbedPagination} from "./embedPagination";
 
 const myIntents = new Intents();
@@ -41,11 +40,6 @@ client.once('ready', async () => {
     // load additional modules
     require('./web');
     require('./scheduler');
-});
-
-// member changed voice channels
-client.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
-   voiceChanged(oldVoiceState, newVoiceState);
 });
 
 // member updated presence
@@ -133,7 +127,11 @@ client.on("threadCreate", thread => {
     }
 });
 
-client.login(config.token).catch(console.error);
+client.login(config.token)
+    .then(() => {
+        require ("djapplications.js");
+    })
+    .catch(console.error);
 
 export async function refreshCommands(guild:Guild, forcedRefresh:boolean) {
     raidTeamInfoChannel = client.channels.cache.get(config.raidteaminfochannel) as TextChannel;
@@ -177,9 +175,6 @@ export async function refreshCommands(guild:Guild, forcedRefresh:boolean) {
             console.error(error);
         }
     })
-
-
-
 
 }
 
