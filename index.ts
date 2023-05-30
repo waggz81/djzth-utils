@@ -121,6 +121,13 @@ client.on("threadCreate", thread => {
     if (thread.parentId) {
         console.log(forums[thread.parentId])
         if (forums[thread.parentId]) {
+            setTimeout(() =>{
+                thread.messages.fetch().then(msgs =>{
+                    console.log("first msg", msgs.first())
+                    console.log(msgs)
+                    msgs.first()?.pin();
+                });
+            }, 1000 * 3);
             thread.send(forums[thread.parentId]).catch(err => { console.log(err)})
             thread.setAutoArchiveDuration("MAX").catch(err => { console.log(err)})
         }
