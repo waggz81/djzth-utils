@@ -1,4 +1,15 @@
-import {Client, Collection, Guild, Intents, Message, MessageReaction, TextChannel} from "discord.js";
+import {
+    Client,
+    Collection,
+    Guild,
+    Intents,
+    Message,
+    MessageReaction,
+    TextChannel,
+    ThreadChannel,
+    VoiceChannel,
+    MessageEmbed, GuildMember
+} from "discord.js";
 import {REST} from "@discordjs/rest";
 import {Routes} from "discord-api-types/v9";
 import * as fs from "fs";
@@ -114,17 +125,13 @@ client.on("messageCreate", message => {
     }
 });
 
-client.on("threadCreate", thread => {
+client.on("threadCreate", async thread => {
     const forums = config.forum_post_auto_mention_roles;
-    console.log(thread);
-    console.log(thread.parentId);
     if (thread.parentId) {
         console.log(forums[thread.parentId])
         if (forums[thread.parentId]) {
             setTimeout(() =>{
                 thread.messages.fetch().then(msgs =>{
-                    console.log("first msg", msgs.first())
-                    console.log(msgs)
                     msgs.first()?.pin();
                 });
             }, 1000 * 3);
@@ -134,9 +141,101 @@ client.on("threadCreate", thread => {
     }
 });
 
+client.on ("guildMemberAdd", async (member) => {
+    const channel = member.guild.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
+    const threadchannel = channel.threads.cache.get(config.auditLogChannels.joinsparts)
+    const embed1 = new MessageEmbed()
+        .setColor('GREEN')
+        .setTitle(`_${member.user.tag}_ joined the discord`)
+    await threadchannel!.send({embeds:[embed1]});
+});
+
+client.on ("guildMemberRemove", async (member) => {
+    const channel = member.guild.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
+    const threadchannel = channel.threads.cache.get(config.auditLogChannels.joinsparts);
+    let roles = '';
+    member.roles.cache.forEach(role =>{
+        if (role.name !== '@everyone') {
+            roles += role.name + '\n'
+        }
+    });
+    roles = roles === '' ? 'no roles' : roles;
+    const embed1 = new MessageEmbed()
+        .setColor('RED')
+        .setTitle(`${member.displayName} _(${member.user.tag})_ left the discord`)
+        .setDescription(`**__Roles:__**\n${roles}`)
+    await threadchannel!.send({embeds:[embed1]});
+
+});
+client.on ("voiceStateUpdate", async (oldstate, newstate) => {
+    const channel = oldstate.guild.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
+    const threadchannel = channel.threads.cache.get(config.auditLogChannels.voice);
+    const member = oldstate.member || newstate.member;
+    const oldchannel = await member!.guild.channels.fetch(oldstate.channelId as string) as VoiceChannel
+    const newchannel = await member!.guild.channels.fetch(newstate.channelId as string) as VoiceChannel
+    if (oldstate.channelId) {
+        // left a channel
+        await threadchannel!.send(`:red_circle: ${member!.user.tag} (${member!.displayName}) left channel ${oldchannel}`);
+    }
+    if (newstate.channelId) {
+        // joined a channel
+        await threadchannel!.send(`:green_circle: ${member!.user.tag} (${member!.displayName}) joined channel ${newchannel}`);
+    }
+});
+
+client.on('messageDelete', async(message) => { // messagedelete is the event which gets triggered if somebody deletes a discord textmessage
+    const guild = await client.guilds.fetch(config.guildID);
+    const author = message.author ? `${guild.members.cache.get(message.author?.id)?.user.tag} (${guild.members.cache.get(message.author?.id)?.displayName})` : 'unknown user';
+    const authorURL = message.author?.avatarURL() ? message.author?.avatarURL()! : 'https://i.imgur.com/pGIb1qm.png';
+    const embed1 = new MessageEmbed()
+        .setColor('RED')
+        .setAuthor({name: author, iconURL: authorURL})
+        .setTitle(`had a message deleted in ${message.channel}`)
+        .setDescription('Check the audit log for details. Original message is below:')
+    const msgContent = message.cleanContent ? message.cleanContent : message.content;
+    const embed2 = new MessageEmbed() // Create a new RichEmbed
+        .setColor('RED')
+        .setTimestamp()
+        .setFooter({text: `Message ID: ${message.id}`})
+        .setDescription(msgContent || 'uncached message content, unable to display');
+    const channel = message.guild!.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
+    const threadchannel = channel.threads.cache.get(config.auditLogChannels.messages);
+    await threadchannel!.send({embeds:[embed1, embed2]})
+});
+
+client.on("guildMemberUpdate", async (oldMember, newMember) => {
+    const guild = await client.guilds.fetch(config.guildID);
+let changes = '';
+    const author = `${oldMember.user.tag} (${oldMember.displayName})`;
+if (oldMember.nickname !== newMember.nickname) {
+    changes += `**__Nickname:__**\n~~${oldMember.nickname}~~ => ${newMember.nickname}`
+}
+if (oldMember.roles !== newMember.roles) {
+    changes += `**__Role Changes:__**\n`;
+}
+oldMember.roles.cache.forEach(role =>{
+    if (!newMember.roles.cache.has(role.id)) {
+        changes += `~~_${role.name}_~~ removed\n`
+    }
+})
+    newMember.roles.cache.forEach(role =>{
+        if (!oldMember.roles.cache.has(role.id)) {
+            changes += `_${role.name}_ added`
+        }
+    })
+    const embed1 = new MessageEmbed()
+        .setColor('BLUE')
+        .setTitle(`${author} was updated`)
+        .setDescription(`${changes}`)
+    const channel = guild!.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
+    const threadchannel = channel.threads.cache.get(config.auditLogChannels.userupdates);
+    await threadchannel!.send({embeds:[embed1]})
+
+});
+
 client.login(config.token)
     .then(() => {
-        require ("djapplications.js");
+      // additional requires
     })
     .catch(console.error);
 
