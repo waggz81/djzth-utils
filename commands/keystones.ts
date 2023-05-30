@@ -12,22 +12,14 @@ module.exports = {
         .addIntegerOption((option) => option.setName("min").setDescription("Minimum keystone level to display").setRequired(false))
         .addIntegerOption((option) => option.setName("max").setDescription("Maximum keystone level to display").setRequired(false))
         .addStringOption((option) => option.setName("dungeon").setDescription("Filter to single dungeon").setRequired(false)
-//            .addChoice("De Other Side", "De Other Side")
-//            .addChoice("Halls of Atonement", "Halls of Atonement")
-//            .addChoice("Mists of Tirna Scithe", "Mists of Tirna Scithe")
-//            .addChoice("Plaguefall", "Plaguefall")
-//            .addChoice("Sanguine Depths", "Sanguine Depths")
-//            .addChoice("Spires of Ascension", "Spires of Ascension")
-//            .addChoice("The Necrotic Wake", "The Necrotic Wake")
-//            .addChoice("Theater of Pain", "Theater of Pain")
-            .addChoice("Streets of Wonder", "Streets of Wonder")
-            .addChoice("So'leah's Gambit", "So'leah's Gambit")
-            .addChoice("Iron Docks", "Iron Docks")
-            .addChoice("Grimrail Depot", "Grimrail Depot")
-            .addChoice("Upper Karazhan", "Upper Karazhan")
-            .addChoice("Lower Karazhan", "Lower Karazhan")
-            .addChoice("Mechagon Workshop", "Mechagon Workshop")
-            .addChoice("Mechagon Junkyard", "Mechagon Junkyard")
+            .addChoice("Brackenhide Hollow", "Brackenhide Hollow")
+            .addChoice("Freehold", "Freehold")
+            .addChoice("Halls of Infusion", "Halls of Infusion")
+            .addChoice("Neltharion's Lair", "Neltharion's Lair")
+            .addChoice("Neltharus", "Neltharus")
+            .addChoice("The Underrot", "The Underrot")
+            .addChoice("The Vortex Pinnacle", "The Vortex Pinnacle")
+            .addChoice("Uldaman: Legacy of Tyr", "Uldaman: Legacy of Tyr")
         ),
     async execute(interaction: CommandInteraction) {
         await interaction.deferReply({ ephemeral: true });
@@ -110,22 +102,14 @@ async function keystonePageEmbed(list: KeystoneEntry[]) {
     const fieldSize = 1000;
 
     const dungeonAbbr: any = {
-        "De Other Side": "DoS",
-        "Halls of Atonement": "HoA",
-        "Mists of Tirna Scithe": "Mists",
-        "Plaguefall": "PF",
-        "Sanguine Depths": "SD",
-        "Spires of Ascension": "SoA",
-        "The Necrotic Wake": "NW",
-        "Theater of Pain": "ToP",
-        "Streets of Wonder": "STRT",
-        "So'leah's Gambit": "GMBT",
-        "Iron Docks": "ID",
-        "Grimrail Depot": "GD",
-        "Lower Karazhan": "LOWR",
-        "Upper Karazhan": "UPPR",
-        "Mechagon Workshop": "WORK",
-        "Mechagon Junkyard": "YARD"
+        "Brackenhide Hollow": "BH",
+        "Freehold": "FH",
+        "Halls of Infusion": "HOI",
+        "Neltharion's Lair": "NL",
+        "Neltharus": "NELT",
+        "The Underrot": "UNDR",
+        "The Vortex Pinnacle": "VP",
+        "Uldaman: Legacy of Tyr": "ULD"
     }
 
     let currentList: KeystoneEntry[] = [];

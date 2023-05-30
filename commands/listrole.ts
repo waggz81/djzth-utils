@@ -2,7 +2,8 @@ import {SlashCommandBuilder} from "@discordjs/builders";
 
 import Table = require('easy-table')
 import {CommandInteraction, GuildMember, MessageEmbed, Role} from "discord.js";
-import {EmbedPages} from "../typings/types";
+import {EmbedPages, RoleListEntry} from "../typings/types";
+import {disableButtons, embedInteractions} from "../embedPagination";
 import {randomUUID} from "crypto";
 
 
