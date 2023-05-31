@@ -75,7 +75,7 @@ client.on('interactionCreate', async interaction => {
     try {
         await command.execute(interaction);
     } catch (error) {
-        console.error(error);
+        console.log(error);
         await interaction.reply({
             content: 'There was an error while executing this command!' +
                 '```' + error + '```', ephemeral: true
@@ -249,7 +249,9 @@ client.login(config.token)
     .then(() => {
         // additional requires
     })
-    .catch(console.error);
+    .catch(error => {
+        console.log(error)
+    });
 
 export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
     raidTeamInfoChannel = client.channels.cache.get(config.raidteaminfochannel) as TextChannel;
@@ -290,7 +292,7 @@ export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
 
             console.log('Successfully registered application commands.');
         } catch (error) {
-            console.error(error);
+            console.log(error);
         }
     })
 

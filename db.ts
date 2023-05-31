@@ -212,6 +212,10 @@ export async function getAuthorizedUsers () {
     const result = await db.query(sql, []);
     return result.rows;
 }
+
+export async function addAbsence (team?:string, startDate?:Date, duration?:number) {
+    //
+}
 process.on('SIGINT', () => {
     db.close();
     process.exit();
