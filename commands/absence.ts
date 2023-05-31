@@ -78,11 +78,12 @@ client.on('interactionCreate', async(interaction: Interaction<CacheType>) => {
         if (interaction.isButton()) {
             const modal = new Modal()
                 .setCustomId(interaction.customId + '-modal')
-                .setTitle('Reason');
+                .setTitle('Comment');
             const reasonInput = new TextInputComponent()
                 .setCustomId('absence-reason-input')
                 .setStyle("SHORT")
-                .setLabel("Notes")
+                .setLabel("Add a comment (or press Submit to skip)")
+                .setPlaceholder("not required, press Submit to continue")
             // @ts-ignore
             const row = new MessageActionRow().addComponents([reasonInput])
             // @ts-ignore
