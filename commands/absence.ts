@@ -14,12 +14,23 @@ import * as dayjs from 'dayjs'
 
 const teams: any[] = [];
 const teamInfo: any[] = [];
-for (const element of Object.entries(config.absences)) {
-    console.log(element);
-    // @ts-ignore
-    teams.push([element[1].team,element[0]]);
-    // @ts-ignore
-    teamInfo[element[0]] = {teamName: element[1].team, channel: element[1].channel, raidDays: element[1].raidDays, role: element[1].role}
+console.log(typeof(config.absences))
+if (typeof(config.absences) !== undefined) {
+    for (const element of Object.entries(config.absences)) {
+        // @ts-ignore
+        teams.push([element[1].team, element[0]]);
+        // @ts-ignore
+        teamInfo[element[0]] = {
+            // @ts-ignore
+            teamName: element[1].team,
+            // @ts-ignore
+            channel: element[1].channel,
+            // @ts-ignore
+            raidDays: element[1].raidDays,
+            // @ts-ignore
+            role: element[1].role
+        }
+    }
 }
 
 module.exports = {
