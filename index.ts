@@ -8,7 +8,7 @@ import {
     TextChannel,
     ThreadChannel,
     VoiceChannel,
-    MessageEmbed, GuildMember
+    MessageEmbed, GuildMember, User, Permissions
 } from "discord.js";
 import {REST} from "@discordjs/rest";
 import {Routes} from "discord-api-types/v9";
@@ -118,6 +118,24 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
 client.on("messageCreate", message => {
     if (message.author.id === client.user!.id || message.channel.isThread()) return;
+    if (message.mentions.roles) {
+        let filterMention = false;
+        let unapprovedRole = '';
+        message.mentions.roles.forEach(thisRole => {
+            const author = message.guild!.members.cache.get(message.author.id);
+            if (config.approved_roles.indexOf(thisRole.id) && !author!.roles.cache.has(thisRole.id) && !author?.permissions.has(Permissions.FLAGS.MENTION_EVERYONE)) {
+                filterMention = true;
+                unapprovedRole += `, \`@${thisRole.name}\``;
+            }
+        });
+        if (filterMention) {
+            message.delete()
+                .then(msg => {
+                    msg.channel.send(`Sorry <@${msg.author.id}>, your message was removed for containing a designated role mention you are not a member of. The following roles were identified: ${unapprovedRole.substring(2)}`);
+                    return false;
+                })
+        }
+    }
     if (config.removeEmbeds.indexOf(message.channel.id) !== -1) {
         setTimeout(() => {
             message.suppressEmbeds(true).catch(console.error)
@@ -213,21 +231,24 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
     let rolechanges = false;
     let nickchanges = false;
     let changedroles = '';
+    const channel = guild!.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
+    const threadchannel = channel.threads.cache.get(config.auditLogChannels.userupdates);
     const author = `${oldMember.user.tag} (${oldMember.displayName})`;
+
     if (oldMember.nickname !== newMember.nickname) {
-        changes += `**__Nickname:__**\n~~${oldMember.nickname}~~ => ${newMember.nickname || 'server nickname removed'}\n`
+        changes += `**__Nickname:__**\n~~${oldMember.nickname}~~ => ${newMember.nickname || 'server nickname removed'}\n`;
         nickchanges = true;
     }
     const ignoredroles = config.ignoredUserUpdateRoles;
     oldMember.roles.cache.forEach(role => {
         if (!newMember.roles.cache.has(role.id) && !ignoredroles.includes(role.id)) {
-            changedroles += `~~_${role.name}_~~ removed\n`
+            changedroles += `~~_${role.name}_~~ removed\n`;
             rolechanges = true;
         }
     })
     newMember.roles.cache.forEach(role => {
         if (!oldMember.roles.cache.has(role.id) && !ignoredroles.includes(role.id)) {
-            changedroles += `_${role.name}_ added`
+            changedroles += `_${role.name}_ added`;
             rolechanges = true;
         }
     })
@@ -239,8 +260,6 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
             .setColor('BLUE')
             .setTitle(`${author} was updated`)
             .setDescription(`${changes}`)
-        const channel = guild!.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
-        const threadchannel = channel.threads.cache.get(config.auditLogChannels.userupdates);
         await threadchannel!.send({embeds: [embed1]})
     }
 });
