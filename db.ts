@@ -213,9 +213,6 @@ export async function getAuthorizedUsers () {
     return result.rows;
 }
 
-export async function addAbsence (team?:string, startDate?:Date, duration?:number) {
-    //
-}
 process.on('SIGINT', () => {
     db.close();
     process.exit();
