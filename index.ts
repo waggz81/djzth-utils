@@ -128,7 +128,6 @@ client.on("messageCreate", message => {
 client.on("threadCreate", async thread => {
     const forums = config.forum_post_auto_mention_roles;
     if (thread.parentId) {
-        console.log(forums[thread.parentId])
         if (forums[thread.parentId]) {
             setTimeout(() => {
                 thread.messages.fetch().then(msgs => {
