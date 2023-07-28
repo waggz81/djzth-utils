@@ -59,7 +59,7 @@ module.exports = {
             keystonePageEmbed(list).then(keystonePages => {
                 let i = 1;
                 for (const embed of keystonePages.embeds) {
-                    embed.setFooter(`Page ${i} of ${keystonePages.pages}`);
+                    embed.setFooter({ text:`Page ${i} of ${keystonePages.pages}`});
                     i++;
                 }
 

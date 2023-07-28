@@ -1,4 +1,4 @@
-import {MessageEmbed} from "discord.js";
+import {EmbedBuilder} from "discord.js";
 
 type KeystoneEntry = {
     character: string,
@@ -26,7 +26,7 @@ type KeystonelistEntry = {
 type EmbedPages = {
     uuid: string,
     pages: number,
-    embeds: MessageEmbed[]
+    embeds: EmbedBuilder[]
 }
 
 type RoleListEntry = {
