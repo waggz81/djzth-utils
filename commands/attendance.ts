@@ -1,9 +1,7 @@
 import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
 import {
-    ActionRowBuilder, Base, BaseInteraction,
-    ButtonBuilder,
-    ButtonStyle,
+    ActionRowBuilder,
     CacheType,
     ChannelType,
     CommandInteraction,
@@ -11,16 +9,19 @@ import {
     ForumChannel,
     GuildForumTagData,
     Interaction,
-    ModalBuilder, ModalMessageModalSubmitInteraction,
+    ModalBuilder,
+    StringSelectMenuBuilder,
+    StringSelectMenuOptionBuilder,
     TextInputBuilder,
-    TextInputStyle
+    TextInputStyle,
+    ThreadChannel
 } from "discord.js";
 import {client} from "../index";
 import * as dayjs from 'dayjs'
 
 const teams: any[] = [];
 const teamInfo: any[] = [];
-if (typeof(config.absences) !== undefined) {
+if (typeof (config.absences) !== undefined) {
     for (const element of Object.entries(config.absences)) {
         // @ts-ignore
         teams.push([element[1].team, element[0]]);
@@ -38,6 +39,25 @@ if (typeof(config.absences) !== undefined) {
     }
 }
 
+function getNextRaidDaysSelectMenu(validWeekdays: number[], team: number) {
+    let day = dayjs();
+    let count = 0;
+    const options: StringSelectMenuOptionBuilder[] = [];
+    while (count < 25) {
+        // if (teamInfo[teams[0][0]].raidDays.includes(day.day())) {
+        if (validWeekdays.includes(day.day())) {
+            const option = new StringSelectMenuOptionBuilder({
+                value: `absence-${team}-${day.unix()}`,
+                label: day.format('ddd, MMM D'),
+            });
+            options.push(option);
+            count++;
+        }
+        day = day.add(1, "d")
+    }
+    return options;
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("attendance")
@@ -49,58 +69,15 @@ module.exports = {
                 .addChoices(teams))
     ,
 
-    async execute(interaction : CommandInteraction) {
-        // do stuff
+    async execute(interaction: CommandInteraction) {
         const team: number = interaction.options.data[0].value as number;
         const role = teamInfo[team].role;
-        const days: number[] = teamInfo[team].raidDays;
-        const buttons: ActionRowBuilder<ButtonBuilder>[] = getNextRaidDaysButtons(days, team);
+
         if (interaction.guild?.members.cache.get(interaction.user.id)?.roles.cache.has(role)) {
-            await interaction.reply({ content: `Upcoming raid days for ${teamInfo[team].teamName}`, ephemeral: true, components: buttons });
-        }
-        else {
-            await interaction.reply({ content: `You don't have the correct role to submit absences for ${teamInfo[team].teamName}`, ephemeral: true});
-        }
-    }
-};
-
-function getNextRaidDaysButtons (validWeekdays: number[], team: number) {
-    let day = dayjs();
-    let count = 0;
-    const buttons = [];
-    while (count < 25) {
-       // if (teamInfo[teams[0][0]].raidDays.includes(day.day())) {
-        if (validWeekdays.includes(day.day())) {
-            const button = new ButtonBuilder({
-                customId: `absence-${team}-${day.unix()}`,
-                label: day.format('ddd, MMM D'),
-                style: ButtonStyle.Primary,
-                emoji: "🗓️"
-            });
-            buttons.push(button);
-            count++;
-        }
-        day = day.add(1,"d")
-    }
-    const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-    for (let i=0, j=0;i < 25; i+=5, j++) {
-        const row = new ActionRowBuilder<ButtonBuilder>();
-        buttons.slice(i, i+5).forEach( btn => {
-            row.addComponents(btn);
-        })
-        rows[j] = row;
-    }
-    return rows;
-}
-
-client.on('interactionCreate', async(interaction: Interaction<CacheType>) => {
-    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
-    if (interaction.customId.startsWith('absence')) {
-        const absence: any[] = interaction.customId.split('-');
-        if (interaction.isButton()) {
+            // await interaction.reply({ content: `_ _\nHere are the upcoming raid days for ${teamInfo[team].teamName}. Make your selection(s) and then click outside the box and your absence(s) will be posted automatically.`, ephemeral: true, components: [row] });
             const modal = new ModalBuilder({
-                customId: interaction.customId + '-modal',
-                title: 'Comment'
+                customId: `absence<fieldsep>${team}<fieldsep>modal`,
+                title: 'Reason for absence'
             });
             const reasonInput = new TextInputBuilder({
                 customId: 'absence-reason-input',
@@ -113,70 +90,119 @@ client.on('interactionCreate', async(interaction: Interaction<CacheType>) => {
             const row = new ActionRowBuilder<TextInputBuilder>().addComponents([reasonInput])
             modal.addComponents(row)
             await interaction.showModal(modal)
-        }
-        if (interaction.isModalSubmit()) {
-            const reason = interaction.fields.getTextInputValue('absence-reason-input');
-            const embed = new EmbedBuilder({
-                description: reason
-            }).setAuthor({
-                    name: interaction.guild?.members.cache.get(interaction.user.id)?.displayName as string,
-                    iconURL: interaction.guild?.members.cache.get(interaction.user.id)?.displayAvatarURL()
-                })
-
-            const message = { embeds: [embed]}
-            const chan = interaction.guild?.channels.cache.get(teamInfo[absence[1]].channel) as ForumChannel;
-            const date = dayjs.unix(absence[2]).format('ddd, MMM D YYYY');
-            const tags: GuildForumTagData[] = [];
-            chan.availableTags.forEach(tag => {
-                tags.push({
-                    name: tag.name,
-                    id: tag.id});
-            })
-            if (chan?.type !== ChannelType.GuildForum) {
-                if (interaction.isFromMessage()) {
-                    interaction.update({
-                        content: `\`\`\`Unable to create absence post for ${teamInfo[absence[1]].teamName}. Tell Waggz.\`\`\``,
-                        components: []
-                    });
-                }
-            }
-            else {
-                const post = chan.threads.cache.find(x => x.name === date);
-                if (post) {
-                    // add to post
-                    post.send(message)
-                }
-                else {
-                    // create new post
-                    const newPost = await chan.threads.create({
-                        message: {content: date},
-                        name: date
-                    });
-                    newPost.send(message);
-                    const newTags = [];
-                    const tag = chan.availableTags.find(x => x.name === dayjs(date).format('MMM'));
-                    if (!tag) {
-                        tags.push({name: dayjs(date).format('MMM')})
-                        await chan.setAvailableTags(tags).then( () => {
-                            newTags.push (chan.availableTags.find(x => x.name === dayjs(date).format('MMM'))?.id);
-                        })
-                    }
-                    else {
-                        newTags.push(tag.id);
-                    }
-                    await newPost.setAppliedTags(newTags)
-                }
-                const reply = new EmbedBuilder({
-                    description: `Absence for ${date} added to ${teamInfo[absence[1]].teamName}`
-                });
-                if (interaction.isFromMessage()) {
-                    interaction.update({
-                        content: '_ _', embeds: [reply],
-                        components: []
-                    });
-                }
-            }
-
+        } else {
+            await interaction.reply({
+                content: `_ _\nYou don't have the correct role to submit absences for ${teamInfo[team].teamName}`,
+                ephemeral: true
+            });
         }
     }
+};
+
+
+client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
+    if (!interaction.isStringSelectMenu() && !interaction.isModalSubmit()) return;
+    if (!interaction.customId.startsWith('absence')) return;
+    const team = Number(interaction.customId.split('<fieldsep>')[1]);
+    const days: number[] = teamInfo[team].raidDays;
+    if (interaction.isModalSubmit()) {
+        const select = new StringSelectMenuBuilder({
+            customId: `absence<fieldsep>${team}<fieldsep>${interaction.fields.getTextInputValue('absence-reason-input')}`,
+            placeholder: 'Select the date(s).',
+            minValues: 1,
+            maxValues: 20
+        }).addOptions(getNextRaidDaysSelectMenu(days, team));
+        const row = new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(select);
+        const embed = new EmbedBuilder({
+            description: `Below are the upcoming raid days for ${teamInfo[team].teamName}. Choose the date(s) you'll be absent and posts will be made for each date selected. Click the \`^\` or outside the selection menu to continue.`
+        }).addFields({
+            name: 'Reason Entered',
+            value: interaction.fields.getTextInputValue('absence-reason-input'),
+            inline: false
+        })
+        interaction.reply({content: `_ _`, ephemeral: true, components: [row], embeds: [embed]});
+    }
+    if (interaction.isStringSelectMenu()) {
+        const embed = new EmbedBuilder({
+            description: interaction.customId.split('<fieldsep>')[2]
+        }).setAuthor({
+            name: interaction.guild?.members.cache.get(interaction.user.id)?.displayName as string,
+            iconURL: interaction.guild?.members.cache.get(interaction.user.id)?.displayAvatarURL()
+        })
+
+        const chan = interaction.guild?.channels.cache.get(teamInfo[team].channel) as ForumChannel;
+
+        if (chan?.type !== ChannelType.GuildForum) {
+            interaction.update({
+                content: `\`\`\`Unable to create absence post for ${teamInfo[team].teamName}. Tell Waggz.\`\`\``,
+                components: []
+            });
+            return;
+        }
+        let absences = '';
+
+        await Promise.all(interaction.values.map(async entry => {
+            const absence = entry.split('-');
+            const date = dayjs.unix(Number(absence[2])).format('ddd, MMM D YYYY');
+            absences += `**${date}**\n`;
+            createAbsencePost(embed, chan, date).catch(console.log)
+        })).then(() => {
+            const reply = new EmbedBuilder({
+                description: `Absence(s) added to ${teamInfo[team].teamName}:\n\n${absences}`
+            });
+            interaction.update({
+                content: '_ _', embeds: [reply],
+                components: []
+            });
+        })
+    }
 })
+
+async function createAbsencePost(embed: EmbedBuilder, parentChannel: ForumChannel, date: string) {
+    const post = parentChannel.threads.cache.find(x => x.name === date);
+    if (post) {
+        // add to post
+        post.send({embeds: [embed]}).catch(console.log)
+    } else {
+        await parentChannel.threads.create({
+            message: {content: date},
+            name: date
+        }).then(thisPost => {
+            thisPost.send({embeds: [embed]}).catch(console.log);
+            addMonthTag(thisPost, dayjs(date).format('MMM'));
+        })
+    }
+    return true;
+}
+
+async function addMonthTag(post: ThreadChannel, tagName: string) {
+    if (!post.parent) return false;
+    if (post.parent.type !== ChannelType.GuildForum) return false;
+    const parent = post.parent as ForumChannel;
+    let tags = getTags(parent)
+    const newTags: string[] = [];
+    const tag = tags.find(x => x.name === tagName);
+    if (!tag) {
+        tags.push({name: tagName})
+        parent.setAvailableTags(tags).then(thisChan => {
+            tags = getTags(parent);
+            newTags.push(tags.find(x => x.name === tagName)?.id as string);
+            post.setAppliedTags(newTags).catch(console.log);
+        })
+    } else {
+        newTags.push(tag.id as string);
+        post.setAppliedTags(newTags).catch(console.log);
+    }
+}
+
+function getTags(chan: ForumChannel) {
+    const tags: GuildForumTagData[] = [];
+    chan.availableTags.forEach(thisTag => {
+        tags.push({
+            name: thisTag.name,
+            id: thisTag.id
+        });
+    })
+    return tags;
+}
