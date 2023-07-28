@@ -1,6 +1,6 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, MessageEmbed} from "discord.js";
-import {client, commands, raidTeamInfoPosts, refreshCommands} from "../index";
+import {CommandInteraction} from "discord.js";
+import {refreshCommands} from "../index";
 
 module.exports = {
     data: new SlashCommandBuilder()

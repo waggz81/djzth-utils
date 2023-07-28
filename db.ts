@@ -1,5 +1,5 @@
 // tslint:disable-next-line:no-var-requires
-import {CommandInteraction, GuildMember, Message, MessageReaction} from "discord.js";
+import {CommandInteraction, GuildMember, Message, MessageReaction, PermissionsBitField} from "discord.js";
 import {randomUUID} from "crypto";
 
 // tslint:disable-next-line:no-var-requires
@@ -43,7 +43,7 @@ export function addRolePending (messageID: string, interaction: CommandInteracti
 // a member with manage roles permission reacted to a message, let's see if it's in the pending role requests table
 export function checkPendingReactions (reaction: MessageReaction, member: GuildMember) {
 
-    if (!member.permissions.has('MANAGE_ROLES')) return;
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles)) return;
 
     const sql = `SELECT * FROM pending_roles WHERE messageID = ${reaction.message.id}`;
 
