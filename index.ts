@@ -57,8 +57,11 @@ client.once(Events.ClientReady, async c => {
     const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`);
     if (guild) {
         console.log("Designated server is", guild.name, guild.id);
+        await guild.members.fetch().catch(console.log).then(()=>{
+            console.log('All users fetched')
+        });
 
-        await refreshCommands(guild, false);
+        await refreshCommands(guild, false).catch(console.log);
     } else console.error("Unable to connect to designated config server");
     // load additional modules
     require('./web');
@@ -316,33 +319,33 @@ client.login(config.token)
 
 export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
     raidTeamInfoChannel = client.channels.cache.get(config.raidteaminfochannel) as TextChannel;
-    const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
     raidTeamInfoPosts = [];
+
+    const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
     if (forcedRefresh) {
         commands = commands.filter(element => {
             return element.name === "refreshcommands"
         })
     }
-    raidTeamInfoChannel.messages.fetch({limit: 100}).then(messages => {
+    raidTeamInfoChannel.messages.fetch({limit: 100})
+        .then(messages => {
+            // Iterate through the messages here with the variable "messages".
+            messages.forEach(message => {
+                raidTeamInfoPosts.push(message);
+            });
 
-        // Iterate through the messages here with the variable "messages".
-        messages.forEach(message => {
-            raidTeamInfoPosts.push(message);
-        });
-
-        for (const file of commandFiles) {
-            const command = requireUncached(`./commands/${file}`);
-
-            if (forcedRefresh && command.data.name === "refreshcommands") {
-                continue;
+            for (const file of commandFiles) {
+                const command = requireUncached(`./commands/${file}`);
+                if (forcedRefresh && command.data.name === "refreshcommands") {
+                    continue;
+                }
+                // Set a new item in the Collection
+                // With the key as the command name and the value as the exported module
+                client.commands.set(command.data.name, command);
+                commands.push(command.data.toJSON());
             }
-
-            // Set a new item in the Collection
-            // With the key as the command name and the value as the exported module
-            client.commands.set(command.data.name, command);
-            commands.push(command.data.toJSON());
-        }
-    }).then(() => {
+        }).then(() => {
         // push the slash commands
         const rest = new REST({version: '9'}).setToken(config.token);
         try {
@@ -350,7 +353,6 @@ export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
                 Routes.applicationGuildCommands(client.user!.id, guild.id),
                 {body: commands},
             );
-
             console.log('Successfully registered application commands.');
         } catch (error) {
             console.log(error);
