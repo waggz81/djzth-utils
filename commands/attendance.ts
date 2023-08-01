@@ -118,7 +118,7 @@ client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
             description: `Below are the upcoming raid days for ${teamInfo[team].teamName}. Choose the date(s) you'll be absent and posts will be made for each date selected. Click the \`^\` or outside the selection menu to continue.`
         }).addFields({
             name: 'Reason Entered',
-            value: interaction.fields.getTextInputValue('absence-reason-input'),
+            value: interaction.fields.getTextInputValue('absence-reason-input') || 'None',
             inline: false
         })
         interaction.reply({content: `_ _`, ephemeral: true, components: [row], embeds: [embed]});
