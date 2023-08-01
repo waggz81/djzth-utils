@@ -1,14 +1,19 @@
 import {
+    ActivityType,
+    ChannelType,
     Client,
     Collection,
+    Colors,
+    EmbedBuilder,
+    Events,
+    GatewayIntentBits,
     Guild,
-    Intents,
     Message,
     MessageReaction,
+    PermissionsBitField,
     TextChannel,
-    ThreadChannel,
-    VoiceChannel,
-    MessageEmbed, GuildMember, User, Permissions
+    ThreadAutoArchiveDuration,
+    VoiceChannel
 } from "discord.js";
 import {REST} from "@discordjs/rest";
 import {Routes} from "discord-api-types/v9";
@@ -16,12 +21,20 @@ import * as fs from "fs";
 import {config} from "./config";
 import {checkPendingReactions} from "./db";
 import {EmbedPagination} from "./embedPagination";
-import {type} from "os";
 
-const myIntents = new Intents();
-myIntents.add('GUILDS', 'GUILD_PRESENCES', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS');
 
-export const client = new Client({intents: myIntents, partials: ['MESSAGE', 'CHANNEL', 'REACTION']});
+export const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildVoiceStates
+    ]
+});
+
 export let raidTeamInfoPosts: Message[] = [];
 export let raidTeamInfoChannel: TextChannel;
 // augment Client to include commands collection for typescript
@@ -37,15 +50,18 @@ export let commands: any[] = [];
 
 
 // client connected and ready
-client.once('ready', async () => {
+client.once(Events.ClientReady, async c => {
     client.guilds.cache.forEach((thisGuild) => {
         console.log("Bot joined", thisGuild.name, thisGuild.id);
     });
     const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`);
     if (guild) {
         console.log("Designated server is", guild.name, guild.id);
+        await guild.members.fetch().catch(console.log).then(()=>{
+            console.log('All users fetched')
+        });
 
-        await refreshCommands(guild, false);
+        await refreshCommands(guild, false).catch(console.log);
     } else console.error("Unable to connect to designated config server");
     // load additional modules
     require('./web');
@@ -56,7 +72,7 @@ client.once('ready', async () => {
 client.on("presenceUpdate", (oldPresence, newPresence) => {
     if (!newPresence.activities) return;
     newPresence.activities.forEach(activity => {
-        if (activity.type === "STREAMING") {
+        if (activity.type === ActivityType.Streaming) {
             // console.log(`${newPresence.user.tag} is streaming at ${activity.url}.`);
         } else {
             // console.log("activity type", activity.type);
@@ -123,7 +139,7 @@ client.on("messageCreate", message => {
         let unapprovedRole = '';
         message.mentions.roles.forEach(thisRole => {
             const author = message.guild!.members.cache.get(message.author.id);
-            if (config.approved_roles.indexOf(thisRole.id) && !author!.roles.cache.has(thisRole.id) && !author?.permissions.has(Permissions.FLAGS.MENTION_EVERYONE)) {
+            if (config.approved_roles.indexOf(thisRole.id) !== -1 && !author!.roles.cache.has(thisRole.id) && !author!.permissions.has(PermissionsBitField.Flags.MentionEveryone)) {
                 filterMention = true;
                 unapprovedRole += `, \`@${thisRole.name}\``;
             }
@@ -149,31 +165,52 @@ client.on("threadCreate", async thread => {
         if (forums[thread.parentId]) {
             setTimeout(() => {
                 thread.messages.fetch().then(msgs => {
-                    msgs.first()?.pin();
+                    msgs.last()?.pin();
                 });
             }, 1000 * 3);
             thread.send(forums[thread.parentId]).catch(err => {
                 console.log(err)
             })
-            thread.setAutoArchiveDuration("MAX").catch(err => {
+            thread.setAutoArchiveDuration(ThreadAutoArchiveDuration.OneWeek).catch(err => {
                 console.log(err)
             })
         }
     }
 });
 
+client.on(Events.ThreadUpdate, async thread => {
+    const forums = config.forum_post_auto_mention_roles;
+    thread.guild.channels.fetch(thread.id).then(thisThread => {
+        if (thisThread?.type === ChannelType.PublicThread && thread.parent?.type === ChannelType.GuildForum && thread.parentId) {
+            if (forums[thread.parentId!]) {
+                let tags = thread.appliedTags;
+                thread.parent.availableTags.forEach(tag => {
+                    if (tag.name === "Pending") {
+                        if (thread.appliedTags.includes(tag.id)) {
+                            tags = thread.appliedTags.filter(entry => {
+                                return entry !== tag.id
+                            })
+                            thread.setAppliedTags(tags).catch(console.log);
+                        }
+                    }
+                })
+            }
+        }
+    })
+})
+
 client.on("guildMemberAdd", async (member) => {
     const channel = member.guild.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
-    const threadchannel = channel.threads.cache.get(config.auditLogChannels.joinsparts)
-    const embed1 = new MessageEmbed()
-        .setColor('GREEN')
+    const embed1 = new EmbedBuilder()
+        .setColor(Colors.Green)
         .setTitle(`_${member.user.tag}_ joined the discord`)
-    await threadchannel!.send({embeds: [embed1]});
+    channel.threads.fetch(config.auditLogChannels.joinsparts).then(thread => {
+        thread!.send({embeds: [embed1]})
+    })
 });
 
 client.on("guildMemberRemove", async (member) => {
     const channel = member.guild.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
-    const threadchannel = channel.threads.cache.get(config.auditLogChannels.joinsparts);
     let roles = '';
     member.roles.cache.forEach(role => {
         if (role.name !== '@everyone') {
@@ -181,44 +218,52 @@ client.on("guildMemberRemove", async (member) => {
         }
     });
     roles = roles === '' ? 'no roles' : roles;
-    const embed1 = new MessageEmbed()
-        .setColor('RED')
-        .setTitle(`${member.displayName} _(${member.user.tag})_ left the discord`)
-        .setDescription(`**__Roles:__**\n${roles}`)
-    await threadchannel!.send({embeds: [embed1]});
-
+    const embed1 = new EmbedBuilder({
+        title: `${member.displayName} _(${member.user.tag})_ left the discord`,
+        description: `**__Roles:__**\n${roles}`,
+        color: Colors.Red
+    });
+    channel.threads.fetch(config.auditLogChannels.joinsparts).then(thread => {
+        thread!.send({embeds: [embed1]})
+    })
 });
 client.on("voiceStateUpdate", async (oldstate, newstate) => {
     const channel = oldstate.guild.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
-    const threadchannel = channel.threads.cache.get(config.auditLogChannels.voice);
     const member = oldstate.member || newstate.member;
     const oldchannel = await member!.guild.channels.fetch(oldstate.channelId as string) as VoiceChannel
     const newchannel = await member!.guild.channels.fetch(newstate.channelId as string) as VoiceChannel
-    if (oldstate.channelId) {
-        // left a channel
-        await threadchannel!.send(`:red_circle: ${member!.user.tag} (${member!.displayName}) left channel ${oldchannel}`);
-    }
-    if (newstate.channelId) {
-        // joined a channel
-        await threadchannel!.send(`:green_circle: ${member!.user.tag} (${member!.displayName}) joined channel ${newchannel}`);
-    }
+    channel.threads.fetch(config.auditLogChannels.voice).then(thread => {
+        if (thread!.archived) {
+            thread!.setArchived(false)
+        }
+        if (oldstate.channelId) {
+            // left a channel
+            thread!.send(`:red_circle: ${member!.user.tag} (${member!.displayName}) left channel ${oldchannel}`);
+        }
+        if (newstate.channelId) {
+            // joined a channel
+            thread!.send(`:green_circle: ${member!.user.tag} (${member!.displayName}) joined channel ${newchannel}`);
+        }
+
+    });
 });
 
 client.on('messageDelete', async (message) => { // messagedelete is the event which gets triggered if somebody deletes a discord textmessage
     const guild = await client.guilds.fetch(config.guildID);
     const author = message.author ? `${guild.members.cache.get(message.author?.id)?.user.tag} (${guild.members.cache.get(message.author?.id)?.displayName})` : 'unknown user';
     const authorURL = message.author?.avatarURL() ? message.author?.avatarURL()! : 'https://i.imgur.com/pGIb1qm.png';
-    const embed1 = new MessageEmbed()
-        .setColor('RED')
+    const embed1 = new EmbedBuilder()
+        .setColor(Colors.Red)
         .setAuthor({name: author, iconURL: authorURL})
         .setTitle(`had a message deleted in ${message.channel}`)
         .setDescription('Check the audit log for details. Original message is below:')
     const msgContent = message.cleanContent ? message.cleanContent : message.content;
-    const embed2 = new MessageEmbed() // Create a new RichEmbed
-        .setColor('RED')
-        .setTimestamp()
-        .setFooter({text: `Message ID: ${message.id}`})
-        .setDescription(msgContent || 'uncached message content, unable to display');
+    const embed2 = new EmbedBuilder({
+        description: msgContent || 'uncached message content, unable to display',
+        footer: {text: `Message ID: ${message.id}`},
+        timestamp: '',
+        color: Colors.Red
+    });
     const channel = message.guild!.channels.cache.get(config.auditLogChannels.channel) as TextChannel;
     const threadchannel = channel.threads.cache.get(config.auditLogChannels.messages);
     await threadchannel!.send({embeds: [embed1, embed2]})
@@ -255,10 +300,11 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
         changes += `**__Role Changes:__**\n${changedroles}`
     }
     if (rolechanges || nickchanges) {
-        const embed1 = new MessageEmbed()
-            .setColor('BLUE')
-            .setTitle(`${author} was updated`)
-            .setDescription(`${changes}`)
+        const embed1 = new EmbedBuilder({
+            color: Colors.Blue,
+            title: `${author} was updated`,
+            description: `${changes}`
+        });
         await threadchannel!.send({embeds: [embed1]})
     }
 });
@@ -273,33 +319,33 @@ client.login(config.token)
 
 export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
     raidTeamInfoChannel = client.channels.cache.get(config.raidteaminfochannel) as TextChannel;
-    const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
     raidTeamInfoPosts = [];
+
+    const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
     if (forcedRefresh) {
         commands = commands.filter(element => {
             return element.name === "refreshcommands"
         })
     }
-    raidTeamInfoChannel.messages.fetch({limit: 100}).then(messages => {
+    raidTeamInfoChannel.messages.fetch({limit: 100})
+        .then(messages => {
+            // Iterate through the messages here with the variable "messages".
+            messages.forEach(message => {
+                raidTeamInfoPosts.push(message);
+            });
 
-        // Iterate through the messages here with the variable "messages".
-        messages.forEach(message => {
-            raidTeamInfoPosts.push(message);
-        });
-
-        for (const file of commandFiles) {
-            const command = requireUncached(`./commands/${file}`);
-
-            if (forcedRefresh && command.data.name === "refreshcommands") {
-                continue;
+            for (const file of commandFiles) {
+                const command = requireUncached(`./commands/${file}`);
+                if (forcedRefresh && command.data.name === "refreshcommands") {
+                    continue;
+                }
+                // Set a new item in the Collection
+                // With the key as the command name and the value as the exported module
+                client.commands.set(command.data.name, command);
+                commands.push(command.data.toJSON());
             }
-
-            // Set a new item in the Collection
-            // With the key as the command name and the value as the exported module
-            client.commands.set(command.data.name, command);
-            commands.push(command.data.toJSON());
-        }
-    }).then(() => {
+        }).then(() => {
         // push the slash commands
         const rest = new REST({version: '9'}).setToken(config.token);
         try {
@@ -307,7 +353,6 @@ export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
                 Routes.applicationGuildCommands(client.user!.id, guild.id),
                 {body: commands},
             );
-
             console.log('Successfully registered application commands.');
         } catch (error) {
             console.log(error);

@@ -1,7 +1,7 @@
 import {addRolePending} from "../db";
 import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, GuildMember} from "discord.js";
+import {CommandInteraction, GuildMember, PermissionsBitField} from "discord.js";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,7 +19,7 @@ module.exports = {
                 return;
             }
 
-            if (config.approved_roles.indexOf(roleID) !== -1 || (interaction.member as GuildMember).permissions.has('MANAGE_ROLES')) {
+            if (config.approved_roles.indexOf(roleID) !== -1 || (interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.ManageRoles)) {
                 await interaction.deferReply({ephemeral: false});
                 (interaction.options.get('target')!.member as GuildMember).roles.add(roleID)
                 .then(() => {
@@ -50,7 +50,6 @@ module.exports = {
 function createPendingEmbed (interaction: CommandInteraction) {
 
     interaction.channel!.send({
-        "content": null,
             "embeds": [
             {
                 "title": "Pending Access Request",

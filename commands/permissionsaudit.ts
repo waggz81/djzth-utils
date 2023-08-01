@@ -1,13 +1,16 @@
 import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
 import {
+    AttachmentBuilder,
     CommandInteraction,
     GuildChannel,
     GuildMember,
-    PermissionOverwriteManager,
+    OverwriteType,
+    PermissionOverwrites,
+    PermissionResolvable,
+    PermissionsBitField,
     Role,
-    ThreadChannel,
-    Permissions, PermissionOverwrites, PermissionFlags, PermissionResolvable, MessageAttachment
+    ThreadChannel
 } from "discord.js";
 import * as fs from "fs";
 import * as converter from "json-2-csv";
@@ -20,23 +23,21 @@ module.exports = {
     async execute(interaction: CommandInteraction) {
         if (config.access_control.includes(interaction.channelId)) {
             const thisChan: GuildChannel | ThreadChannel = interaction.guild!.channels.cache.get(interaction.options.get('channel')!.channel!.id)!;
-            const flags = Object.entries(Permissions.FLAGS);
+            const flags = Object.entries(PermissionsBitField.Flags);
             const permissionsData: any[] = [];
-            // @ts-ignore
-            console.log(thisChan.permissionOverwrites.cache);
             // @ts-ignore
             thisChan.permissionOverwrites.cache.each((roleOrMember: PermissionOverwrites) => {
                 let thisRole: Role;
                 let thisMember: GuildMember;
-                let perms: Permissions;
+                let perms: PermissionsBitField;
                 let roleOrMemberName: string = "";
 
-                if (roleOrMember.type === "role") {
+                if (roleOrMember.type === OverwriteType.Role) {
                     thisRole = interaction.guild!.roles.cache.get(roleOrMember.id) as Role;
                     perms = thisChan.permissionsFor(thisRole);
                     roleOrMemberName = thisRole.name;
                 }
-                if (roleOrMember.type === "member") {
+                if (roleOrMember.type === OverwriteType.Member) {
                     thisMember = interaction.guild!.members.cache.get(roleOrMember.id) as GuildMember;
                     perms = thisChan.permissionsFor(thisMember);
                     roleOrMemberName = thisMember.displayName;
@@ -74,13 +75,13 @@ module.exports = {
                     // write CSV to a file
                     fs.writeFile(thisChan.name + '_permissionOverrides.csv', csv as string, (error) => {
                         if (!error) {
-                            const file = new MessageAttachment(thisChan.name + '_permissionOverrides.csv')
+                            const file = new AttachmentBuilder(thisChan.name + '_permissionOverrides.csv')
                             interaction.reply({ephemeral: true, files: [file]});
                         }
                     })
                 })
             } else {
-                interaction.reply({content: "No Permission Overrides for #" + thisChan.name, ephemeral: true});
+                await interaction.reply({content: "No Permission Overrides for #" + thisChan.name, ephemeral: true});
             }
         }
         else {
