@@ -10,7 +10,7 @@ client.on(Events.GuildMemberAdd, async (member) => {
             text: `Discord ID: ${member.user.id}`
         }
     });
-    const channel = member.guild.channels.fetch(config.auditLogChannels.channel)
+    member.guild.channels.fetch(config.auditLogChannels.channel)
         .then(thisChan => {
             (thisChan as TextChannel).threads.fetch(config.auditLogChannels.joinsparts).then(thread => {
                 if (thread) {
@@ -20,4 +20,5 @@ client.on(Events.GuildMemberAdd, async (member) => {
                 } else myLog('Error: Missing joinsparts audit log channel.');
             })
         })
+        .catch(myLog)
 });
