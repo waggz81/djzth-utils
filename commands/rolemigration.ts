@@ -1,5 +1,5 @@
 import {memberNicknameMention, SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, GuildMember, MessageOptions, Role, TextChannel} from "discord.js";
+import {CommandInteraction, PermissionsBitField, Role} from "discord.js";
 
 
 module.exports = {
@@ -9,7 +9,7 @@ module.exports = {
         .addRoleOption((option) => option.setName("source").setDescription("Select a source role").setRequired(true))
         .addRoleOption((option) => option.setName("dest").setDescription("Select a destination role").setRequired(true)),
     async execute(interaction : CommandInteraction) {
-        if (interaction.memberPermissions?.has('ADMINISTRATOR')) {
+        if (interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
             // do stuff
             let memberList = '';
             let migratedMembers = '';

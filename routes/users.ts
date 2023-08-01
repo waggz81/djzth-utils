@@ -3,6 +3,7 @@ import {config} from "../config";
 const router = express.Router();
 import fetch = require('node-fetch');
 import {userLogin} from "../db";
+import {myLog} from "../index";
 
 /* GET users listing. */
 /*router.get('/', (req, res) => {
@@ -32,7 +33,7 @@ router.get('/', async (request, response) => {
             });
 
             const oauthData = await oauthResult.json();
-            console.log(oauthData);
+            myLog(oauthData);
             const userData = await getDiscordUser(oauthData.access_token);
             const uuid = await userLogin(userData);
             return response.send("Please use this number in the upload client as your user id: <br /><br />" + uuid);
@@ -40,7 +41,7 @@ router.get('/', async (request, response) => {
         } catch (error) {
             // NOTE: An unauthorized token will not throw an error;
             // it will return a 401 Unauthorized response in the try block above
-            console.error(error);
+            myLog(error);
         }
 
     }
@@ -56,7 +57,7 @@ async function getDiscordUser (token: string) {
         },
     });
     const json = await userResult.json();
-    console.log(json);
+    myLog(json);
     return (json);
 }
 module.exports = router;

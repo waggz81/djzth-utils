@@ -1,12 +1,11 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, GuildMember, Message, MessageEmbed} from "discord.js";
-import {raidTeamInfoChannel, raidTeamInfoPosts} from "../index";
+import {CommandInteraction, EmbedBuilder, GuildMember} from "discord.js";
+import {myLog, raidTeamInfoChannel, raidTeamInfoPosts} from "../index";
 import {config} from "../config";
 
 
 const choices: (string | null)[][] = [];
 raidTeamInfoPosts.forEach(post => {
-    // console.log(post.embeds[0].title)
     if (post.embeds[0]) {
         choices.push([post.embeds[0].title, post.id])
     }
@@ -126,11 +125,14 @@ module.exports = {
                     }
 
                     if (submission.name === "new") {
-                        console.log("new");
-                        const embed = new MessageEmbed()
-                            .setTitle(interaction.options.get('teamname')?.value as string)
-                            .setDescription(interaction.options.get('description')?.value as string)
-                            .addFields(
+                        myLog("new");
+                        const embed = new EmbedBuilder({
+                            title: interaction.options.get('teamname')?.value as string,
+                            description: interaction.options.get('description')?.value as string,
+                            footer: {text: "Last Updated by " + member.displayName},
+                            timestamp: Date.now(),
+                            thumbnail: {url: thumbnail}
+                        }).addFields(
                                 {
                                     name: 'Schedule',
                                     value: interaction.options.get('schedule')?.value as string
@@ -151,22 +153,21 @@ module.exports = {
                                     name: 'Currently Recruiting',
                                     value: interaction.options.get('currentneeds')?.value as string
                                 },
-                            )
-                            .setFooter({text: "Last Updated by " + member.displayName})
-                            .setTimestamp(Date.now())
-                            .setThumbnail(thumbnail)
-
+                            );
                         raidTeamInfoChannel.send({embeds: [embed]})
 
                     } else {
-                        console.log("edit");
+                        myLog("edit");
                         raidTeamInfoChannel.messages.fetch(interaction.options.get('teamname')?.value as string)
                             .then(message => {
-                                console.log(message)
-                                const embed = new MessageEmbed()
-                                    .setTitle(message.embeds[0].title as string)
-                                    .setDescription(interaction.options.get('description')?.value as string || message.embeds[0].description as string)
-                                    .addFields(
+                                myLog(message)
+                                const embed = new EmbedBuilder({
+                                    title: message.embeds[0].title as string,
+                                    description: interaction.options.get('description')?.value as string || message.embeds[0].description as string,
+                                    footer: {text: "Last Updated by " + member.displayName},
+                                    timestamp: Date.now(),
+                                    thumbnail: {url:thumbnail || message.embeds[0].thumbnail?.url || ''}
+                                }).addFields(
                                         {
                                             name: 'Schedule',
                                             value: interaction.options.get('schedule')?.value as string || message.embeds[0].fields[0].value
@@ -188,9 +189,7 @@ module.exports = {
                                             value: interaction.options.get('currentneeds')?.value as string || message.embeds[0].fields[4].value
                                         },
                                     )
-                                    .setFooter({text: "Last Updated by " + member.displayName})
-                                    .setTimestamp(Date.now())
-                                    .setThumbnail(thumbnail || message.embeds[0].thumbnail?.url || '')
+
                                 message.edit({embeds: [embed]})
                             })
                     }

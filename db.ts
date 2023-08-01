@@ -1,6 +1,7 @@
 // tslint:disable-next-line:no-var-requires
-import {CommandInteraction, GuildMember, Message, MessageReaction} from "discord.js";
+import {CommandInteraction, GuildMember, Message, MessageReaction, PermissionsBitField} from "discord.js";
 import {randomUUID} from "crypto";
+import {myLog} from "./index";
 
 // tslint:disable-next-line:no-var-requires
 const sqlite3 = require('sqlite3').verbose();
@@ -9,7 +10,7 @@ const db = new sqlite3.Database('./database.db', (err: Error) => {
     if (err) {
         console.error(err.message);
     }
-    console.log('Connected to the database.');
+    myLog('Connected to the database.');
 });
 
 // from https://blog.pagesd.info/2019/10/29/use-sqlite-node-async-await/
@@ -43,7 +44,7 @@ export function addRolePending (messageID: string, interaction: CommandInteracti
 // a member with manage roles permission reacted to a message, let's see if it's in the pending role requests table
 export function checkPendingReactions (reaction: MessageReaction, member: GuildMember) {
 
-    if (!member.permissions.has('MANAGE_ROLES')) return;
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles)) return;
 
     const sql = `SELECT * FROM pending_roles WHERE messageID = ${reaction.message.id}`;
 
@@ -68,19 +69,19 @@ export function checkPendingReactions (reaction: MessageReaction, member: GuildM
                                                 target.roles.add(role)
                                                     .then(() => {
                                                         resolvePending(message, member, true);
-                                                    }).catch(console.error)
+                                                    }).catch(myLog)
                                                 break;
                                             case 'removerole':
                                                 target.roles.remove(role)
                                                     .then(() => {
                                                         resolvePending(message, member, true);
-                                                    }).catch(console.error)
+                                                    }).catch(myLog)
                                                 break;
                                             default:
                                                 break;
                                         }
 
-                                    }).catch(console.error)
+                                    }).catch(myLog)
                             }
                         }
                         if (reaction.emoji.name === '🚫') {
@@ -88,7 +89,7 @@ export function checkPendingReactions (reaction: MessageReaction, member: GuildM
                         }
                         message.guild.members.fetch(row.submitter)
                             .then(submitter => {
-                                submitter.send(`Your role request for ${message.guild!.members.cache.get(row.target)!.displayName} has been ${approved} - ${message.url}`).catch(console.error)
+                                submitter.send(`Your role request for ${message.guild!.members.cache.get(row.target)!.displayName} has been ${approved} - ${message.url}`).catch(myLog)
                             })
                     }
                 })
@@ -114,15 +115,15 @@ function resolvePending (message: Message, member: GuildMember, approved = false
                 }
             ]
 
-    message.edit({content: "_ _", embeds: embed }).catch(console.error)
+    message.edit({content: "_ _", embeds: embed }).catch(myLog)
     message.reactions.removeAll()
         .then(() => {
             db.run("DELETE FROM pending_roles WHERE messageID=(?)", message.id, (err: Error) => {
                 if (err) {
-                    console.error(err)
+                    myLog(err)
                 }
             });
-        }).catch(console.error)
+        }).catch(myLog)
 }
 
 // add newly submitted keystone data to database
@@ -136,13 +137,13 @@ export function uploadKeystones (entry: any) {
         }
         const timestamp = (typeof row === 'undefined') ? 0 : row.timestamp;
         if (Math.sign(entry.timestamp - timestamp)) {
-            console.log("Updating ", entry.character);
+            myLog(`Updating ${entry.character}`);
             const sql2 = `REPLACE INTO
                     keystones (character, name, class, spec, role, score_all, score_tank, score_healer, score_dps, guild, key_level, dungeon_name, timestamp, uploader)
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
             db.run(sql2, Object.values(entry), (err2: Error) => {
                 if (err2) {
-                    return console.error(err2.message);
+                    return myLog(err2.message);
                 }
             });
         }
@@ -170,7 +171,7 @@ export async function getKeystones (min?: number|null, max?: number|null, dungeo
         const result = await db.query(sql, []);
         return result.rows;
     } catch (err) {
-        return console.error((err as Error).message);
+        return myLog((err as Error).message);
     }
 }
 
@@ -178,7 +179,7 @@ export async function getKeystones (min?: number|null, max?: number|null, dungeo
 export function truncateKeystones (timestamp: number) {
     const sql = `DELETE FROM keystones WHERE timestamp < ?`;
     db.run(sql, [timestamp], (err: object) => {
-        if (err) console.error(err)
+        if (err) myLog(err)
     });
 }
 
@@ -189,13 +190,13 @@ export async function userLogin (userData: any) {
     const sql = "SELECT * FROM users WHERE id = ?";
     const result = await db.query(sql, [userData.id])
 
-    console.log(result)
+    myLog(result)
     if (result.rows.length === 0){
         // insert
         const sql2 = "INSERT INTO users (uuid, id, username, discriminator, avatar) VALUES (?, ?, ?, ?, ?)"
         db.run(sql2, [uuid, userData.id, userData.username, userData.discriminator, userData.avatar], (err:object) => {
             if (err){
-                console.error (err);
+                myLog (err);
                 return(err);
             }
         })

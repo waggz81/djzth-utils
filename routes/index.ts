@@ -4,6 +4,7 @@ const router = express.Router();
 import {uploadKeystones, getKeystones, getAuthorizedUsers} from "../db";
 import {KeystoneEntry, KeystonelistEntry} from "../typings/types";
 import {getLastReset} from "../scheduler";
+import {myLog} from "../index";
 
 /*
 function rateScore (score) {
@@ -13,8 +14,8 @@ function rateScore (score) {
 
 /* GET home page. */
 router.get('/', (req, res) => {
-     console.log(req.headers.host);
-     console.log(req);
+     myLog(req.headers.host);
+     myLog(req);
     getKeystones().then((rows) => {
         let content = "";
         rows.forEach((row: KeystoneEntry) => {
@@ -26,11 +27,10 @@ router.get('/', (req, res) => {
 
 
 router.post('/upload', async (req, res) => {
-    console.log((req));
+    myLog(req);
     new Promise((resolve, reject) => {
         const valid: KeystonelistEntry[]= [];
         req.body.keystones.forEach((keystone: any) => {
-            // console.log(keystone);
             const scores = keystone.RIOProfile.mythic_plus_scores_by_season[0].scores;
             const entry: KeystoneEntry = {
                 character: keystone.character,
@@ -59,7 +59,7 @@ router.post('/upload', async (req, res) => {
                 if (!found) {
                     reject("Unauthorized user token");
                 }
-                console.log("last reset = ", getLastReset(), "timestamp = ", entry.timestamp);
+                myLog(`last reset = ${getLastReset()} timestamp = ${entry.timestamp}`);
                 if (entry.timestamp > getLastReset()) {
                     uploadKeystones(entry);
                     valid.push({Name: entry.name, Level:entry.key_level, Dungeon: entry.dungeon_name });

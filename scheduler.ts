@@ -3,7 +3,7 @@ import {truncateKeystones} from "./db";
 import schedule = require('node-schedule');
 import {dadjoke} from "./dadjoke";
 import {config} from "./config";
-import {client} from "./index";
+import {client, myLog} from "./index";
 import {ForumChannel} from "discord.js";
 import dayjs = require("dayjs");
 
@@ -31,11 +31,11 @@ const job = schedule.scheduleJob(
     },
     () => {
         truncateKeystones(getLastReset());
-        console.log('Truncating keystones table from database.');
+        myLog('Truncating keystones table from database.');
     });
 // in case we weren't online during last reset, run once on startup
 truncateKeystones(getLastReset());
-console.log("Scheduled job ", job.name)
+myLog(`Scheduled job: ${job.name}`);
 
 const dadjokejob = schedule.scheduleJob(
     "dadjokes",
@@ -45,15 +45,15 @@ const dadjokejob = schedule.scheduleJob(
         tz: 'Etc/UTC'
     },
     () => {
-        dadjoke().catch(console.error);
+        dadjoke().catch(myLog);
     }
 );
-console.log("Scheduled job ", dadjokejob.name);
+myLog(`Scheduled job: ${dadjokejob.name}`);
 
 function cleanupAttendancePosts() {
     const teams: any[] = [];
     const teamInfo: any[] = [];
-    const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`);
+    const guild = client.guilds.cache.get(config.guildID);
     if (typeof (config.absences) !== undefined) {
         for (const element of Object.entries(config.absences)) {
             // @ts-ignore
@@ -72,8 +72,8 @@ function cleanupAttendancePosts() {
                 const date = dayjs(post.name);
                 const now = dayjs();
                 if (date.isBefore(now) && !post.locked && !post.archived) {
-                    post.setLocked(true, 'Past Event').catch(console.log);
-                    post.setArchived(true, 'Past Event').catch(console.log);
+                    post.setLocked(true, 'Past Event').catch(myLog);
+                    post.setArchived(true, 'Past Event').catch(myLog);
                 }
             })
         })
@@ -92,5 +92,5 @@ const attendancePostsCleanup = schedule.scheduleJob(
         cleanupAttendancePosts();
     }
 );
-console.log("Scheduled job ", attendancePostsCleanup.name);
+myLog(`Scheduled job: ${attendancePostsCleanup.name}`);
 cleanupAttendancePosts();

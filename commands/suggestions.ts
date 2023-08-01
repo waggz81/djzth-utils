@@ -1,6 +1,7 @@
 import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, GuildMember, MessageOptions, TextChannel} from "discord.js";
+import {Colors, CommandInteraction, EmbedBuilder, GuildMember, Message, MessagePayload, TextChannel} from "discord.js";
+import {myLog} from "../index";
 
 const teams: any[] = []
 for (const element of Object.entries(config.suggestionChannels)) {
@@ -22,30 +23,27 @@ module.exports = {
                 .setRequired(true)),
 
     async execute(interaction : CommandInteraction) {
-        console.log(interaction.member as GuildMember)
-        const msg: MessageOptions = {
-            "content": "_ _",
-            "embeds": [
-                {
-                    "title": "New Suggestion for <" + interaction.options.get('team')?.value as string + ">",
-                    "description": interaction.options.get('suggestion')?.value as string,
-                    "color": "#182897",
-                    "footer": {
-                        "text": "Suggested by: " + (interaction.member as GuildMember).user.tag + " (" + (interaction.member as GuildMember).displayName + ")"
-                    },
-                    "timestamp": Date.now()
-                }
-            ]
-        }
+        const embed = new EmbedBuilder({
+            title: `New Suggestion for <${interaction.options.get('team')?.value as string}>`,
+            description: interaction.options.get('suggestion')?.value as string,
+            color: Colors.Blue,
+            footer: {
+                "text": "Suggested by: " + (interaction.member as GuildMember).user.tag + " (" + (interaction.member as GuildMember).displayName + ")"
+            },
+            timestamp: Date.now()
+        })
         const chanID = config.suggestionChannels[interaction.options.get('team')?.value as string]
         await interaction.deferReply({ephemeral: true});
-        (interaction.guild?.channels.cache.get(chanID) as TextChannel)?.send(msg)
+        (interaction.guild?.channels.cache.get(chanID) as TextChannel)?.send({
+            content: "_ _",
+            embeds: [embed]
+        })
             .then(() => {
-                interaction.editReply({content: "Suggestion submitted!", embeds: msg.embeds})
+                interaction.editReply({content: "Suggestion submitted!", embeds: [embed]})
             })
             .catch((err) => {
-                console.log(err)
-                interaction.editReply({content: "Error: Notify admin"})
+                myLog(err)
+                interaction.editReply({content: "Error: Notify Waggz"})
             })
 
     }

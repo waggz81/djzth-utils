@@ -2,7 +2,7 @@ import * as http from "https";
 import {RequestOptions} from "https";
 import {config} from "./config";
 import {Guild, GuildChannel, TextChannel} from "discord.js";
-import {client} from "./index";
+import {client, myLog} from "./index";
 import * as fs from 'fs';
 import ErrnoException = NodeJS.ErrnoException;
 
@@ -25,7 +25,7 @@ const options: RequestOptions = {
 export async function dadjoke() {
 
     const logTimestamp = new Date();
-    const guild = client.guilds.cache.get(`${BigInt(config.guildID)}`) as Guild;
+    const guild = client.guilds.cache.get(config.guildID) as Guild;
     const channel:TextChannel = guild.channels.cache.get(config.dad_jokes.channel) as TextChannel;
     const req = http.request(options, (res: any) => {
         const chunks: any[] = [];
@@ -36,13 +36,13 @@ export async function dadjoke() {
 
         res.on("end", () => {
             const body = JSON.parse(Buffer.concat(chunks).toString());
-            console.log(body);
+            myLog(body);
 
             fs.readFile(fileName, (err: ErrnoException | null, data: Buffer) => {
                 if (err) throw err;
                 if(data.includes(body.id)){
                     // exit function if exists
-                    console.log(body.id, " already sent!");
+                    myLog(`${body.id} already sent!`);
                     dadjoke();
                 }
                 else {

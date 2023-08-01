@@ -1,7 +1,8 @@
 import {config} from "../config";
 import {addRolePending} from "../db";
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, GuildMember} from "discord.js";
+import {CommandInteraction, GuildMember, PermissionsBitField} from "discord.js";
+import {myLog} from "../index";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,14 +20,14 @@ module.exports = {
                 return;
             }
 
-            if (config.approved_roles.indexOf(roleID) !== -1 || (interaction.member as GuildMember).permissions.has('MANAGE_ROLES')) {
+            if (config.approved_roles.indexOf(roleID) !== -1 || (interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.ManageRoles)) {
                 await interaction.deferReply({ephemeral: false});
                 (interaction.options.get('target')!.member as GuildMember).roles.remove(roleID)
                     .then(() => {
                         interaction.editReply({content: `_ _\n${(interaction.member as GuildMember).displayName} removed the \`@${interaction.options.get('role')!.role!.name}\` role from \`${target}\``});
                     })
                     .catch((error: Error) =>{
-                        console.error(error);
+                        myLog(error);
                         interaction.editReply({
                             content: `Error: ${error.name} - ${error.message}\n_ _\n` +
                                 `Role: ${interaction.options.get('role')!.role!.name}\n` +
@@ -49,7 +50,6 @@ module.exports = {
 
 function createPendingEmbed (interaction: CommandInteraction) {
     interaction.channel!.send({
-        "content": null,
         "embeds": [
             {
                 "title": "Pending Access Request",
@@ -59,8 +59,8 @@ function createPendingEmbed (interaction: CommandInteraction) {
         ]
     })
         .then((message) => {
-            message.react('✅').catch(console.error);
-            message.react('🚫').catch(console.error);
+            message.react('✅').catch(myLog);
+            message.react('🚫').catch(myLog);
             addRolePending(message.id, interaction);
         })
 }
