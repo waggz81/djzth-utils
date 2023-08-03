@@ -11,6 +11,7 @@ client.on(Events.MessageDelete, async (message) => {
     let author = 'unknown user';
     let authorURL = 'https://i.imgur.com/pGIb1qm.png';
     if (message.author && message.guild) {
+        if (message.author.bot) return;
         message.guild.members.fetch(message.author.id).then(member => {
             author = `${member.displayName} (${member.user.tag})`;
             authorURL = member.displayAvatarURL() || 'https://i.imgur.com/pGIb1qm.png';
