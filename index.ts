@@ -1,11 +1,20 @@
-import {Client, Collection, Events, GatewayIntentBits, Guild, Message, Partials, TextChannel} from "discord.js";
+import {
+    Client,
+    Collection,
+    Events,
+    GatewayIntentBits,
+    Guild,
+    Message,
+    Partials,
+    PermissionsBitField,
+    TextChannel
+} from "discord.js";
 import {REST} from "@discordjs/rest";
 import {Routes} from "discord-api-types/v9";
 import * as fs from "fs";
 import {config} from "./config";
 import * as path from "path";
 import * as dayjs from "dayjs";
-import {ChannelType} from "discord-api-types/v10";
 
 export const client = new Client({
     intents: [
@@ -50,11 +59,16 @@ client.once(Events.ClientReady, async c => {
         await guild.members.fetch().catch(myLog).then(() => {
             myLog('All users fetched')
         });
+
         guild.channels.cache.forEach(thisChan => {
-            if (thisChan.type === ChannelType.GuildText) {
-                thisChan.messages.fetch({limit: 100}).then(() => {
-                    myLog(`Cached ${thisChan.messages.cache.size} messages from ${thisChan.name}`);
-                }).catch(myLog);
+            if (thisChan.isTextBased()) {
+                if (thisChan.permissionsFor(guild.members.me!).has(PermissionsBitField.Flags.ViewChannel) &&
+                    thisChan.permissionsFor(guild.members.me!).has(PermissionsBitField.Flags.ReadMessageHistory) &&
+                    thisChan.permissionsFor(guild.members.me!).has(PermissionsBitField.Flags.Connect)) {
+                    thisChan.messages.fetch({limit: 100}).then(() => {
+                        myLog(`Cached ${thisChan.messages.cache.size} messages from ${thisChan.name} (${thisChan.id})`);
+                    }).catch(myLog);
+                }
             }
         })
         await refreshCommands(guild, false).catch(myLog);
@@ -127,6 +141,6 @@ function requireUncached(module: any) {
     return require(module);
 }
 
-export function myLog (log: any) {
+export function myLog(log: any) {
     console.log(dayjs().format('YYYY-MM-DDTHH:mm:ssZ'), log);
 }
