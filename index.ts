@@ -5,6 +5,7 @@ import * as fs from "fs";
 import {config} from "./config";
 import * as path from "path";
 import * as dayjs from "dayjs";
+import {ChannelType} from "discord-api-types/v10";
 
 export const client = new Client({
     intents: [
@@ -48,19 +49,25 @@ client.once(Events.ClientReady, async c => {
         await guild.members.fetch().catch(myLog).then(() => {
             myLog('All users fetched')
         });
-
+        guild.channels.cache.forEach(thisChan => {
+            if (thisChan.type === ChannelType.GuildText) {
+                thisChan.messages.fetch({limit: 100}).then(() => {
+                    myLog(`Cached ${thisChan.messages.cache.size} messages from ${thisChan.name}`);
+                }).catch(myLog);
+            }
+        })
         await refreshCommands(guild, false).catch(myLog);
     } else console.error("Unable to connect to designated config server");
     // load additional modules
-    require('./web');
-    require('./scheduler');
     const events = path.join(__dirname, 'events');
     fs.readdirSync(events).forEach(file => {
         if (file.endsWith('.js')) {
             myLog(`Including events file: ${file}`);
             require(path.join(events, file));
         }
-    })
+    });
+    require('./web');
+    require('./scheduler');
 });
 
 client.login(config.token)
