@@ -87,7 +87,7 @@ function welcomeNewMember(member: GuildMember | PartialGuildMember) {
         `If you have any questions feel free to ask in the server!`;
     member.user.send({content: msg}).then(() => {
         // stuff
-        msg = `### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\n_ _\nWelcome to the community!`;
+        msg = `### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\nWelcome to the community!`;
     }).catch(err => {
         myLog(err);
         if (err.status === 403) {
@@ -101,12 +101,17 @@ function welcomeNewMember(member: GuildMember | PartialGuildMember) {
         member.guild.channels.fetch(config.welcomechannel).then(thisChan => {
             if (thisChan && thisChan.type === ChannelType.GuildText) {
                 thisChan.send({
+                    /*
                     embeds: [new EmbedBuilder({
                         description: msg,
                         thumbnail: {
                             url: 'https://cdn.discordapp.com/icons/231141125359009793/a_e474c60ca8b04f50663a0442702eedfa.gif?size=128'
-                        }
-                    })]
+                        },
+                    })],*/
+                    allowedMentions: {
+                        users: [member.id]
+                    },
+                    content: `<@211477674797957120> has welcomed a new member!\n${msg}`
                 }).catch(myLog);
             }
         }).catch(myLog)

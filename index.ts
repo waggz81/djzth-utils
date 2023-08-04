@@ -109,9 +109,9 @@ export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
             );
             myLog('Successfully registered application commands.');
         } catch (error) {
-            myLog(error);
+            console.error(error);
         }
-    })
+    }).catch(console.error);
 }
 
 function requireUncached(module: any) {
