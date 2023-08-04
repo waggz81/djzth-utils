@@ -9,6 +9,7 @@ import {
     PartialGuildMember,
     TextChannel
 } from "discord.js";
+import {AuditLogEvent, Colors, EmbedBuilder, Events, TextChannel} from "discord.js";
 import {client, myLog} from "../index";
 
 client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
@@ -44,9 +45,14 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
             changes += `**__Role Changes:__**\n${changedroles}`
         }
         if (rolechanges || nickchanges) {
+            const fetchedLogs = await oldMember.guild.fetchAuditLogs({
+                type: AuditLogEvent.MemberRoleUpdate,
+                limit: 10,
+            });
+            const executor = fetchedLogs.entries.find(x => x.targetId === oldMember.id)?.executorId as string;
             const embed1 = new EmbedBuilder({
                 color: Colors.Blue,
-                title: `${author} was updated`,
+                title: `${author} was updated by ${oldMember.guild.members.cache.get(executor)?.displayName}`,
                 description: `${changes}`
             });
             oldMember.guild.channels.fetch(config.auditLogChannels.channel).then(thisChan => {

@@ -1,4 +1,14 @@
-import {Client, Collection, Events, GatewayIntentBits, Guild, Message, Partials, TextChannel} from "discord.js";
+import {
+    Client,
+    Collection,
+    Events,
+    GatewayIntentBits,
+    Guild,
+    Message,
+    Partials,
+    PermissionsBitField,
+    TextChannel
+} from "discord.js";
 import {REST} from "@discordjs/rest";
 import {Routes} from "discord-api-types/v9";
 import * as fs from "fs";
@@ -14,7 +24,8 @@ export const client = new Client({
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildPresences,
-        GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildModeration
     ],
     partials: [
         Partials.Message,
@@ -49,18 +60,29 @@ client.once(Events.ClientReady, async c => {
             myLog('All users fetched')
         });
 
+        guild.channels.cache.forEach(thisChan => {
+            if (thisChan.isTextBased()) {
+                if (thisChan.permissionsFor(guild.members.me!).has(PermissionsBitField.Flags.ViewChannel) &&
+                    thisChan.permissionsFor(guild.members.me!).has(PermissionsBitField.Flags.ReadMessageHistory) &&
+                    thisChan.permissionsFor(guild.members.me!).has(PermissionsBitField.Flags.Connect)) {
+                    thisChan.messages.fetch({limit: 100}).then(() => {
+                        myLog(`Cached ${thisChan.messages.cache.size} messages from ${thisChan.name} (${thisChan.id})`);
+                    }).catch(myLog);
+                }
+            }
+        })
         await refreshCommands(guild, false).catch(myLog);
     } else console.error("Unable to connect to designated config server");
     // load additional modules
-    require('./web');
-    require('./scheduler');
     const events = path.join(__dirname, 'events');
     fs.readdirSync(events).forEach(file => {
         if (file.endsWith('.js')) {
             myLog(`Including events file: ${file}`);
             require(path.join(events, file));
         }
-    })
+    });
+    require('./web');
+    require('./scheduler');
 });
 
 client.login(config.token)
@@ -119,6 +141,6 @@ function requireUncached(module: any) {
     return require(module);
 }
 
-export function myLog (log: any) {
+export function myLog(log: any) {
     console.log(dayjs().format('YYYY-MM-DDTHH:mm:ssZ'), log);
 }

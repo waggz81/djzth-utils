@@ -83,7 +83,7 @@ module.exports = {
                 customId: 'absence-reason-input',
                 style: TextInputStyle.Short,
                 label: "Add a comment (or press Submit to skip)",
-                placeholder: "Not required, press Submit to continue",
+                placeholder: "This field is limited to 70 characters",
                 required: false
             });
 
@@ -107,7 +107,7 @@ client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
     const days: number[] = teamInfo[team].raidDays;
     if (interaction.isModalSubmit()) {
         const select = new StringSelectMenuBuilder({
-            customId: `absence<fieldsep>${team}<fieldsep>${interaction.fields.getTextInputValue('absence-reason-input')}`,
+            customId: `absence<fieldsep>${team}<fieldsep>${interaction.fields.getTextInputValue('absence-reason-input').slice(0,70)}`,
             placeholder: 'Select the date(s).',
             minValues: 1,
             maxValues: 20
@@ -118,7 +118,7 @@ client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
             description: `Below are the upcoming raid days for ${teamInfo[team].teamName}. Choose the date(s) you'll be absent and posts will be made for each date selected. Click the \`^\` or outside the selection menu to continue.`
         }).addFields({
             name: 'Reason Entered',
-            value: interaction.fields.getTextInputValue('absence-reason-input') || 'None',
+            value: interaction.fields.getTextInputValue('absence-reason-input').slice(0,70) || 'None',
             inline: false
         })
         interaction.reply({content: `_ _`, ephemeral: true, components: [row], embeds: [embed]});
