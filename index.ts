@@ -108,7 +108,11 @@ export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
         .then(messages => {
             // Iterate through the messages here with the variable "messages".
             messages.forEach(message => {
-                raidTeamInfoPosts.push(message);
+                message.embeds.forEach(embed => {
+                    if (embed.fields.find(x => x.name = 'Schedule')) {
+                        raidTeamInfoPosts.push(message);
+                    }
+                });
             });
 
             for (const file of commandFiles) {
@@ -131,9 +135,9 @@ export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
             );
             myLog('Successfully registered application commands.');
         } catch (error) {
-            myLog(error);
+            console.error(error);
         }
-    })
+    }).catch(console.error);
 }
 
 function requireUncached(module: any) {
