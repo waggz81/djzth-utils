@@ -46,7 +46,7 @@ declare module "discord.js" {
 // add all commands from commands subdir
 client.commands = new Collection();
 export let commands: any[] = [];
-
+export let thisServer: Guild;
 
 // client connected and ready
 client.once(Events.ClientReady, async c => {
@@ -55,6 +55,7 @@ client.once(Events.ClientReady, async c => {
     });
     const guild = client.guilds.cache.get(config.guildID);
     if (guild) {
+        thisServer = guild;
         myLog(`Designated server is ${guild.name} ${guild.id}`);
         await guild.members.fetch().catch(myLog).then(() => {
             myLog('All users fetched')
