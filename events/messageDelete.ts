@@ -13,7 +13,7 @@ client.on(Events.MessageDelete, async (message) => {
     if (message.author && message.guild) {
         if (message.author.bot) return;
         message.guild.fetchAuditLogs({
-            type: AuditLogEvent.MemberRoleUpdate,
+            type: AuditLogEvent.MessageDelete,
             limit: 10,
         }).then((fetchedLogs) => {
             const executor = fetchedLogs.entries.find(x => x.targetId === message.author?.id)?.executorId as string;
