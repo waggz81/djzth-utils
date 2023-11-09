@@ -99,7 +99,7 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
                 allowedMentions: {
                     users: [member.id]
                 },
-                content: `<@${executor.id}> has welcomed a new member!\nSay ${greeting[(Math.floor(Math.random() * greeting.length))]} to <@${member.id}>!`
+                content: `<@${executor.id}> has welcomed a new member!\nSay "${greeting[(Math.floor(Math.random() * greeting.length))]}" to <@${member.id}>!`
             }).catch(myLog);
             thisChan.threads.create({
                 name: `Welcome`,

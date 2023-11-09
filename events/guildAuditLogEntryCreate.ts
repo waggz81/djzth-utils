@@ -1,4 +1,4 @@
-import {APIRole, AuditLogEvent, Events, Message, Snowflake, TextChannel} from "discord.js";
+import {APIRole, AuditLogEvent, Events, GuildMember, Message, Snowflake, TextChannel} from "discord.js";
 import {client, myLog, thisServer} from "../index";
 import {welcomeNewMember} from "./guildMemberUpdate";
 import {config} from "../config";
@@ -17,8 +17,6 @@ client.on(Events.GuildAuditLogEntryCreate, async auditLog => {
 
         case AuditLogEvent.MemberRoleUpdate:
             myLog("member updated");
-            const target = thisServer.members.cache.get(targetId as Snowflake);
-            const executor = thisServer.members.cache.get(executorId as Snowflake);
                 const changes = auditLog.changes;
                 if (changes) {
                     changes.forEach((change) => {
@@ -26,8 +24,15 @@ client.on(Events.GuildAuditLogEntryCreate, async auditLog => {
                             if (change.new){
                                 const newchanges: APIRole[] = change.new as APIRole[];
                                 if (config.generalaccessrole === newchanges[0].id as string) {
-                                    if (target &&  executor) {
-                                        welcomeNewMember(target, executor)
+                                    if (targetId &&  executorId) {
+                                        thisServer.members.fetch(targetId)
+                                            .then(()=> {
+                                                thisServer.members.fetch(executorId)
+                                            })
+                                            .then(() => {
+                                                welcomeNewMember(thisServer.members.cache.get(targetId) as GuildMember, thisServer.members.cache.get(executorId) as GuildMember)
+                                            })
+                                            .catch((err) => myLog(err));
                                     }
                                 }
                             }
@@ -35,7 +40,7 @@ client.on(Events.GuildAuditLogEntryCreate, async auditLog => {
                     })
                 }
         default:
-            myLog(auditLog);
+           // myLog(auditLog);
             return;
     }
 })
