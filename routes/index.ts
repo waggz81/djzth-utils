@@ -14,8 +14,8 @@ function rateScore (score) {
 
 /* GET home page. */
 router.get('/', (req, res) => {
-     myLog(req.headers.host);
-     myLog(req);
+    // myLog(req.headers.host);
+    // myLog(req);
     getKeystones().then((rows) => {
         let content = "";
         rows.forEach((row: KeystoneEntry) => {

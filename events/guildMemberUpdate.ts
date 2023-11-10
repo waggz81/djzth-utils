@@ -50,7 +50,7 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
             });
             const executor = fetchedLogs.entries.find(x => x.targetId === oldMember.id)?.executorId as string;
             if (welcome) {
-                welcomeNewMember(newMember as GuildMember, newMember.guild.members.cache.get(executor) as GuildMember);
+                // welcomeNewMember(newMember as GuildMember, newMember.guild.members.cache.get(executor) as GuildMember);
             }
             const embed1 = new EmbedBuilder({
                 color: Colors.Blue,
@@ -68,7 +68,7 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
     }
 });
 
-function welcomeNewMember(member: GuildMember, executor: GuildMember) {
+export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
     const greeting = [
         'Hey there',
         'Hiya',
@@ -99,7 +99,7 @@ function welcomeNewMember(member: GuildMember, executor: GuildMember) {
                 allowedMentions: {
                     users: [member.id]
                 },
-                content: `<@${executor.id}> has welcomed a new member!\nSay ${greeting[(Math.floor(Math.random() * greeting.length))]} to <@${member.id}>!`
+                content: `<@${executor.id}> has welcomed a new member!\nSay "${greeting[(Math.floor(Math.random() * greeting.length))]}" to <@${member.id}>!`
             }).catch(myLog);
             thisChan.threads.create({
                 name: `Welcome`,
