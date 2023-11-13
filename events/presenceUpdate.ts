@@ -14,7 +14,7 @@ client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
             }
             let streaming = false;
             newPresence.activities.forEach(activity => {
-                if (activity.type === ActivityType.Streaming) {
+                if (activity.type === ActivityType.Streaming && thisUser.roles.cache.has(config.livestreamroleaccessrole)) {
                     myLog(`${thisUser.displayName} is streaming at ${activity.url}.`);
                     thisUser.roles.add(config.livestreamrole as string)
                         .then(()=>{
@@ -31,6 +31,7 @@ client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
                 removeStreamingRole(thisUser);
             }
         })
+        .catch(myLog);
 });
 
 function removeStreamingRole (user: GuildMember) {
