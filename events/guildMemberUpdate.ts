@@ -9,7 +9,7 @@ import {
     TextChannel,
     ThreadAutoArchiveDuration
 } from "discord.js";
-import {client, myLog} from "../index";
+import {client, myLog, updateStatus} from "../index";
 
 client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
     let changes = '';
@@ -41,7 +41,8 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
             }
         });
         if (rolechanges) {
-            changes += `**__Role Changes:__**\n${changedroles}`
+            changes += `**__Role Changes:__**\n${changedroles}`;
+            updateStatus();
         }
         if (rolechanges || nickchanges) {
             const fetchedLogs = await oldMember.guild.fetchAuditLogs({
@@ -106,10 +107,10 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
                 autoArchiveDuration: ThreadAutoArchiveDuration.ThreeDays,
                 type: ChannelType.PrivateThread
             }).then(thisThread =>{
-                myLog(thisThread)
+                myLog(thisThread);
                 thisThread.send(msg).catch(myLog);
                 thisThread.members.add(member.id).catch(myLog);
             }).catch(myLog);
         }
-    }).catch(myLog)
+    }).catch(myLog);
 }

@@ -1,6 +1,6 @@
 import {config} from "../config";
 import {Colors, EmbedBuilder, Events, TextChannel} from "discord.js";
-import {client, myLog} from "../index";
+import {client, myLog, updateStatus} from "../index";
 
 client.on(Events.GuildMemberRemove, async (member) => {
     let roles = '';
@@ -33,4 +33,5 @@ client.on(Events.GuildMemberRemove, async (member) => {
                 } else myLog('Error: Missing joinsparts audit log channel.');
             });
         }).catch(myLog);
+    updateStatus();
 });

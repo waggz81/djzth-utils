@@ -1,4 +1,5 @@
 import {
+    ActivityType,
     Client,
     Collection,
     Events,
@@ -148,4 +149,9 @@ function requireUncached(module: any) {
 
 export function myLog(log: any) {
     console.log(dayjs().format('YYYY-MM-DDTHH:mm:ssZ'), log);
+}
+export function updateStatus () {
+    const count = thisServer.roles.cache.get(config.generalaccessrole)?.members.size;
+    if (client.user)
+        client.user.setActivity({name: `Community Members: ${count}`, type: ActivityType.Custom});
 }
