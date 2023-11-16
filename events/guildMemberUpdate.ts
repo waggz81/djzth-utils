@@ -86,14 +86,7 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
         'Aloha',
         'Ahoy'
     ];
-    const msg = `### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\n` +
-        `Welcome to the Death Jesters & Zeroes to Heroes community!\n\n` +
-        `I just wanted to point you to the <#676924129076576263> channel to select your pingable roles and viewable channel categories. ` +
-        `Make sure you go through the <#523555986343198728> channel to find out all about our community and this server, and use the ` +
-        `[ticketing system](https://discord.com/channels/231141125359009793/523555986343198728/1133186114463739934) there for any guild invites you need.\n` +
-        `Also you can check out the <#725788225230340097> channel if you're interested in joining any of our organized regular raid teams.\n\n` +
-        `If you have any questions feel free to ask in the server or one of our friendly <@&1172578109032255558> here in this private thread!\nYou can leave this thread at any time, or it will autoarchive in three days.`;
-
+    const msg = `### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\n${config.welcomemsg}`;
     member.guild.channels.fetch(config.welcomechannel).then(thisChan => {
         if (thisChan && thisChan.type === ChannelType.GuildText) {
             thisChan.send({
