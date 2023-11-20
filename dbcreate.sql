@@ -1,5 +1,5 @@
 --
--- File generated with SQLiteStudio v3.4.4 on Thu Jun 1 10:35:07 2023
+-- File generated with SQLiteStudio v3.4.4 on Mon Nov 20 16:44:54 2023
 --
 -- Text encoding used: System
 --
@@ -13,6 +13,21 @@ CREATE TABLE IF NOT EXISTS absences (
     comment TEXT,
     user    NUMERIC NOT NULL,
     id      INTEGER PRIMARY KEY AUTOINCREMENT
+);
+
+
+-- Table: auditlog
+CREATE TABLE IF NOT EXISTS auditlog (
+    timestamp,
+    executorId                    INTEGER,
+    reason                        TEXT,
+    username                      TEXT,
+    autoModerationRuleName        TEXT,
+    autoModerationRuleTriggerType INTEGER,
+    channelId                     INTEGER,
+    channelName                   TEXT,
+    messageId                     INTEGER,
+    MessageContent                TEXT
 );
 
 
