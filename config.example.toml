@@ -1,0 +1,97 @@
+[production]
+    clientID = "" Bot clientID
+    clientSecret = "" Bot clientSecret
+    token = "" # Bot Token
+    guildID = "231141125359009793" # discord server
+    raidteaminfochannel = "725788225230340097"
+    generalaccessrole = "1129382155370369064"
+    welcomechannel = "271159840007651338"
+    livestreamrole = "1173358162095644672"
+    livestreamroleaccessrole = "817160204499681290"
+    welcomemsg = '''
+_ _
+**Welcome to the Death Jesters & Zeroes to Heroes community!**
+
+
+'''
+    access_control = [
+        "662119191452844042", # djzth #access_control
+    ]
+    approved_roles = [
+        "271155115375853569", # Nomi's
+        "271154514554388481", # Rocket
+        "271155002276446209", # Ramrod
+        "271154489421987842", # VWCS
+        "753830861325074492", # Phoenix
+        "271154554274316288", # MRGL
+        "680185653090451506", # Death Jesters
+        "843099676454813719", # TBC Raid
+        "879215044250980383", # Fanatasy Football League
+        "916070202964312124", # Left Shark
+        "1015240870125121546", # Classic Val'anyr
+        "1015240644127621170", # Classic Jenkins
+        "1015240861807808532", # Classic Booty Bay
+        "1015240867197493298", # Classic Shadowmourne
+        "1030892358209904700", # Classic One Tier Behind
+        "1070207773733818398", # Team Salt
+        "1129672699715788841", # Integrity
+    ]
+    removeEmbeds = [
+        "489902812612788225", # djzth #community_streamers
+    ]
+    ignoredUserUpdateRoles = [
+        "800954708943831101",   # @Low Key Dps
+        "801910641911660555",   # @High Key Dps
+        "859660097461157921",   # @Heroic Raid Dps
+        "859660286373658664",   # @Mythic Raid Dps
+        "859660434793299969",   # @Sweaty Key Dps
+        "860014493433331772",   # @Mid Key Dps
+        "963448755330383922",   # @Normal Raid Dps
+        "800954540073287690",   # @Low Key Tank
+        "800954788820287489",   # @High Key Tank
+        "859660506042335304",   # @Sweaty Key Tank
+        "860014563226550272",   # @Mid Key Tank
+        "859660144308256848",   # @Heroic Raid Tank
+        "859660334590722078",   # @Mythic Raid Tank
+        "963448831805124668",   # @Normal Raid Tank
+        "800954647304208415",   # @Low Key Heals
+        "860014530452389909",   # @Mid Key Heals
+        "800954876678504479",   # @High Key Heals
+        "859660473115738123",   # @Sweaty Key Heals
+        "963448563835224085",   # @Normal Raid Heals
+        "859659862958276659",   # @Heroic Raid Heals
+        "859659912203468820",   # @Mythic Raid Heals
+        "859661742191673344",   # @RBG Heals
+        "859661846012624907",   # @Retail Arena Heals
+        "859660834842083349",   # @Retail BGs
+        "801911031949295617",   # @Achievements
+        "980263596749651978",   # @Valor Farm
+        "1007826210853769256",  # @Collectors
+        "859661778313150494",   # @Retail Arena
+        "800954956429262879",   # @RBGs
+        "856487798442033162",   # @Visitor
+        "1028822270585610260",  # @Pronouns
+        "1028822485090709545",  # @Pronouns
+        "1028822603688841316",  # @Pronouns
+        "1028822724048588970",  # @Pronouns
+        "1028822735297724528",  # @Pronouns
+    ]
+    [production.dad_jokes]
+        channel = "271295308506464276" # djzth #dad_joke_central
+        rapidapikey = ""
+    [production.suggestionChannels]
+        "Team Rocket" = "912844780109725746"
+        "Community Leadership" = "271341649131470849"
+    [production.forum_post_auto_mention_roles]
+        1027625066986475580 = "<@&748569132575883436>"
+    [production.auditLogChannels]
+        "channel" = "1061694562537574490"
+        "voice" = "1061694861998297178"
+        "messages" = "1061694811578585240"
+        "joinsparts" = "1061694672956829726"
+        "userupdates" = "1113026103754367037"
+    [[production.absences]]
+        team = "Death Jesters"
+        role = "680185653090451506"
+        channel = "1134197041459892385"
+        raidDays = [5,6] # 0 = Sunday, 1 = Monday

@@ -6,7 +6,7 @@ import {myLog} from "./index";
 // tslint:disable-next-line:no-var-requires
 const sqlite3 = require('sqlite3').verbose();
 
-const db = new sqlite3.Database('./database.db', (err: Error) => {
+export const db = new sqlite3.Database('./database.db', (err: Error) => {
     if (err) {
         console.error(err.message);
     }
