@@ -65,6 +65,7 @@ client.on(Events.GuildAuditLogEntryCreate, async auditLog => {
 function addAuditLogEntry (auditLog: GuildAuditLogsEntry<AuditLogEvent, GuildAuditLogsActionType, GuildAuditLogsTargetType, AuditLogEvent>) {
     const extra: GuildAuditLogsEntryExtraField[AuditLogEvent.AutoModerationFlagToChannel] = auditLog.extra as GuildAuditLogsEntryExtraField[AuditLogEvent.AutoModerationFlagToChannel];
     const channel: TextChannel = thisServer.channels.cache.get(extra.channel.id) as TextChannel;
+
     const data = [
         dayjs().format('YYYY-MM-DDTHH:mm:ssZ'),
         auditLog.executorId,
@@ -74,12 +75,14 @@ function addAuditLogEntry (auditLog: GuildAuditLogsEntry<AuditLogEvent, GuildAud
         extra.autoModerationRuleTriggerType,
         channel.id,
         channel.name,
+        (channel.parentId) ? channel.parentId : "undefined",
+        (channel.parentId) ? thisServer.channels.cache.get(channel.parentId)?.name : "undefined",
         channel.lastMessage?.id,
         channel.lastMessage?.cleanContent,
     ];
     const sql = `INSERT INTO
-                    auditlog (timestamp, executorId, reason, username, autoModerationRuleName, autoModerationRuleTriggerType, channelId, channelName, messageId, MessageContent)
-                             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    auditlog (timestamp, executorId, reason, username, autoModerationRuleName, autoModerationRuleTriggerType, channelId, channelName, channelParentId, channelParentName, messageId, MessageContent)
+                             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     db.run(sql, data, (err: Error) => {
         if (err) {
             console.error(err.message);

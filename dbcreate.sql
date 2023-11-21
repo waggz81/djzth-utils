@@ -1,5 +1,5 @@
 --
--- File generated with SQLiteStudio v3.4.4 on Mon Nov 20 16:44:54 2023
+-- File generated with SQLiteStudio v3.4.4 on Mon Nov 20 18:06:54 2023
 --
 -- Text encoding used: System
 --
@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS auditlog (
     autoModerationRuleTriggerType INTEGER,
     channelId                     INTEGER,
     channelName                   TEXT,
+    channelParentId               INTEGER,
+    channelParentName             TEXT,
     messageId                     INTEGER,
     MessageContent                TEXT
 );
