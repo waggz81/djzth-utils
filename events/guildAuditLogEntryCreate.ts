@@ -25,7 +25,7 @@ client.on(Events.GuildAuditLogEntryCreate, async auditLog => {
     switch (action) {
         case AuditLogEvent.MessageDelete:
             myLog("message deleted");
-
+            break;
         case AuditLogEvent.MemberRoleUpdate:
             myLog("member updated");
                 const changes = auditLog.changes;
@@ -50,13 +50,15 @@ client.on(Events.GuildAuditLogEntryCreate, async auditLog => {
                         }
                     })
                 }
+                break;
         case AuditLogEvent.AutoModerationFlagToChannel:
             myLog("message flagged by automod");
             myLog(auditLog);
             addAuditLogEntry(auditLog);
+            break;
         default:
            // myLog(auditLog);
-            return;
+            break;
     }
 })
 
