@@ -28,43 +28,41 @@ client.on(Events.GuildAuditLogEntryCreate, async auditLog => {
             break;
         case AuditLogEvent.MemberRoleUpdate:
             myLog("member updated");
-                const changes = auditLog.changes;
-                if (changes) {
-                    changes.forEach((change) => {
-                        if (change.key === '$add') {
-                            if (change.new){
-                                const newchanges: APIRole[] = change.new as APIRole[];
-                                if (config.generalaccessrole === newchanges[0].id as string) {
-                                    if (targetId &&  executorId) {
-                                        thisServer.members.fetch(targetId)
-                                            .then(()=> {
-                                                thisServer.members.fetch(executorId)
-                                            })
-                                            .then(() => {
-                                                welcomeNewMember(thisServer.members.cache.get(targetId) as GuildMember, thisServer.members.cache.get(executorId) as GuildMember)
-                                            })
-                                            .catch((err) => myLog(err));
-                                    }
+            const changes = auditLog.changes;
+            if (changes) {
+                changes.forEach((change) => {
+                    if (change.key === '$add') {
+                        if (change.new) {
+                            const newchanges: APIRole[] = change.new as APIRole[];
+                            if (config.generalaccessrole === newchanges[0].id as string) {
+                                if (targetId && executorId) {
+                                    thisServer.members.fetch(targetId)
+                                        .then(() => {
+                                            thisServer.members.fetch(executorId)
+                                        })
+                                        .then(() => {
+                                            welcomeNewMember(thisServer.members.cache.get(targetId) as GuildMember, thisServer.members.cache.get(executorId) as GuildMember)
+                                        })
+                                        .catch((err) => myLog(err));
                                 }
                             }
                         }
-                    })
-                }
-                break;
+                    }
+                })
+            }
+            break;
         case AuditLogEvent.AutoModerationFlagToChannel:
             myLog("message flagged by automod");
-            myLog(auditLog);
+            // myLog(auditLog);
             addAuditLogEntry(auditLog);
             break;
         default:
-           // myLog(auditLog);
             break;
     }
 })
 
-
 // add an auditlog entry to db
-function addAuditLogEntry (auditLog: GuildAuditLogsEntry<AuditLogEvent, GuildAuditLogsActionType, GuildAuditLogsTargetType, AuditLogEvent>) {
+function addAuditLogEntry(auditLog: GuildAuditLogsEntry<AuditLogEvent, GuildAuditLogsActionType, GuildAuditLogsTargetType, AuditLogEvent>) {
     const extra: GuildAuditLogsEntryExtraField[AuditLogEvent.AutoModerationFlagToChannel] = auditLog.extra as GuildAuditLogsEntryExtraField[AuditLogEvent.AutoModerationFlagToChannel];
     const channel: TextChannel = thisServer.channels.cache.get(extra.channel.id) as TextChannel;
 
