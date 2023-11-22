@@ -14,13 +14,14 @@ client.on(Events.GuildMemberRemove, async (member) => {
             roles += role.name + '\n'
         }
     });
+    const memberSince = (member.joinedAt) ? member.joinedAt : "unknown";
     roles = roles === '' ? 'no roles' : roles;
     const embed1 = new EmbedBuilder({
         title: `${member.displayName} _(${member.user.tag})_ left the discord`,
         description: `**__Roles:__**\n${roles}`,
         color: Colors.Red,
         footer: {
-            text: `Discord ID: ${member.user.id}`
+            text: `Discord ID: ${member.user.id} - Joined: ${memberSince}`
         }
     });
     member.guild.channels.fetch(config.auditLogChannels.channel)
