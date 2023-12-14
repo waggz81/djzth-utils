@@ -12,7 +12,6 @@ client.on(Events.MessageCreate, message => {
                 const author = message.guild.members.cache.get(message.author.id);
                 if (author) {
                     if (config.approved_roles.indexOf(thisRole.id) !== -1 && !author.roles.cache.has(thisRole.id) && !author.permissions.has(PermissionsBitField.Flags.MentionEveryone)) {
-                        myLog("filtermention true")
                         filterMention = true;
                         unapprovedRole += `, \`@${thisRole.name}\``;
                     }
