@@ -58,7 +58,9 @@ client.once(Events.ClientReady, async c => {
     if (guild) {
         thisServer = guild;
         myLog(`Designated server is ${guild.name} ${guild.id}`);
-        await guild.members.fetch().catch(myLog).then(() => {
+        await guild.members.fetch()
+            .catch(myLog)
+            .then(() => {
             myLog('All users fetched')
         });
 
