@@ -9,12 +9,14 @@ client.on(Events.MessageCreate, message => {
         let unapprovedRole = '';
         message.mentions.roles.forEach(thisRole => {
             if (message.guild) {
-                message.guild.members.fetch(message.author.id).then(author => {
+                const author = message.guild.members.cache.get(message.author.id);
+                if (author) {
                     if (config.approved_roles.indexOf(thisRole.id) !== -1 && !author.roles.cache.has(thisRole.id) && !author.permissions.has(PermissionsBitField.Flags.MentionEveryone)) {
+                        myLog("filtermention true")
                         filterMention = true;
                         unapprovedRole += `, \`@${thisRole.name}\``;
                     }
-                }).catch(myLog)
+                }
             }
         });
         if (filterMention) {

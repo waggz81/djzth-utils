@@ -1,8 +1,9 @@
 import {config} from "../config";
 import {Colors, EmbedBuilder, Events, TextChannel} from "discord.js";
-import {client, myLog} from "../index";
+import {client, myLog, thisServer} from "../index";
 
 client.on(Events.GuildMemberAdd, async (member) => {
+    await thisServer.members.fetch(member.id);
     const embed1 = new EmbedBuilder({
         title: `_${member.user.tag}_ joined the discord`,
         color: Colors.Green,
