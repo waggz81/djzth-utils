@@ -4,15 +4,7 @@ import {Colors, CommandInteraction, EmbedBuilder} from "discord.js";
 import {myLog} from "../index";
 import dayjs = require("dayjs");
 
-let resettime = dayjs.unix(1701874800);
-let lastreset = resettime;
-const now = dayjs();
 
-
-while (now > resettime) {
-    lastreset = resettime;
-    resettime = resettime.add(3,'d')
-}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,6 +12,13 @@ module.exports = {
         .setDescription("When does BFD reset for Classic Season of Discovery?"),
 
     async execute(interaction : CommandInteraction) {
+        let resettime = dayjs.unix(1701874800);
+        let lastreset = resettime;
+        const now = dayjs();
+        while (now > resettime) {
+            lastreset = resettime;
+            resettime = resettime.add(3,'d')
+        }
         const embed = new EmbedBuilder({
             title: `Blackfathom Deeps resets:`,
             description: ``,
