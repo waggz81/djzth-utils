@@ -11,6 +11,11 @@ import {
 } from "discord.js";
 import {client, myLog, updateStatus} from "../index";
 
+const linkedroles: (string | [string, unknown])[] = []
+Object.entries(config.linkedroles).forEach((entry) => {
+    linkedroles.push([entry[0],entry[1]]);
+})
+
 client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
     let changes = '';
     let rolechanges = false;
@@ -38,6 +43,10 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
                 if (role.id === config.generalaccessrole) {
                     welcome = true;
                 }
+            }
+            const thisRole = role.id;
+            if (config.linkedroles[thisRole]) {
+                newMember.roles.add(config.linkedroles[thisRole]).catch(myLog);
             }
         });
         if (rolechanges) {
