@@ -14,6 +14,20 @@ import {EmbedPages, KeystoneEntry} from "../typings/types";
 import {randomUUID} from "crypto";
 import {myLog} from "../index";
 
+const currentDungeons: string[][] = [
+    ["Atal'Dazar", "AD"],
+    ["Black Rook Hold", "BRH"],
+    ["DotI: Galakrond's Fall", "FALL"],
+    ["DotI: Murozond's Rise", "RISE"],
+    ["Darkheart Thicket", "DHT"],
+    ["The Everbloom", "EB"],
+    ["Throne of the Tides", "TOTT"],
+    ["Waycrest ManorWaycrest Manor", "WM"],
+]
+const choices: [name: string, value: string][] = [];
+currentDungeons.forEach((entry) => {
+    choices.push([entry[0],entry[0]])
+})
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("keystones")
@@ -21,14 +35,7 @@ module.exports = {
         .addIntegerOption((option) => option.setName("min").setDescription("Minimum keystone level to display").setRequired(false))
         .addIntegerOption((option) => option.setName("max").setDescription("Maximum keystone level to display").setRequired(false))
         .addStringOption((option) => option.setName("dungeon").setDescription("Filter to single dungeon").setRequired(false)
-            .addChoice("Brackenhide Hollow", "Brackenhide Hollow")
-            .addChoice("Freehold", "Freehold")
-            .addChoice("Halls of Infusion", "Halls of Infusion")
-            .addChoice("Neltharion's Lair", "Neltharion's Lair")
-            .addChoice("Neltharus", "Neltharus")
-            .addChoice("The Underrot", "The Underrot")
-            .addChoice("The Vortex Pinnacle", "The Vortex Pinnacle")
-            .addChoice("Uldaman: Legacy of Tyr", "Uldaman: Legacy of Tyr")
+            .addChoices(choices)
         ),
     async execute(interaction: CommandInteraction) {
         await interaction.deferReply({ ephemeral: true });
@@ -64,7 +71,6 @@ module.exports = {
                 }
 
                 embedInteractions.push(keystonePages);
-                myLog(`pages ${keystonePages}`);
 
                 const row = new ActionRowBuilder<ButtonBuilder>();
                 const replyOptions: InteractionReplyOptions = {
@@ -94,7 +100,7 @@ module.exports = {
                 interaction.editReply(replyOptions);
                 disableButtons(interaction);
             })
-        })
+        }).catch(console.log)
     }
 };
 
@@ -105,17 +111,11 @@ async function keystonePageEmbed(list: KeystoneEntry[]) {
         embeds: []
     };
     const fieldSize = 1000;
-
-    const dungeonAbbr: any = {
-        "Brackenhide Hollow": "BH",
-        "Freehold": "FH",
-        "Halls of Infusion": "HOI",
-        "Neltharion's Lair": "NL",
-        "Neltharus": "NELT",
-        "The Underrot": "UNDR",
-        "The Vortex Pinnacle": "VP",
-        "Uldaman: Legacy of Tyr": "ULD"
-    }
+    const dungeonAbbr: string[] = []
+    currentDungeons.forEach((entry) => {
+        // @ts-ignore
+        dungeonAbbr[entry[0]] = entry[1];
+    })
 
     let currentList: KeystoneEntry[] = [];
     let nameField: string = "";
@@ -131,7 +131,9 @@ async function keystonePageEmbed(list: KeystoneEntry[]) {
         levelField = currentList.reduce(
             (previousValue, currentValue) => `${previousValue}${currentValue.key_level}\n`
             , "");
+
         dungeonField = currentList.reduce(
+            // @ts-ignore
             (previousValue, currentValue) => `${previousValue}${dungeonAbbr[currentValue.dungeon_name]}\n`
             , "");
 

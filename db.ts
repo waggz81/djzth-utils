@@ -163,7 +163,7 @@ export async function getKeystones (min?: number|null, max?: number|null, dungeo
             sql = sql + `key_level <= ${max} AND `
         }
         if (dungeon) {
-            sql = sql + `dungeon_name = '${dungeon}' AND `
+            sql = sql + `dungeon_name = '${dungeon.replace("'", "''")}' AND `
         }
         sql = sql.substring(0, sql.length-5)
     }
