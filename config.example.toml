@@ -9,12 +9,7 @@
     livestreamrole = "1173358162095644672"
     livestreamroleaccessrole = "817160204499681290"
     moderatorrole = "859909000374911016"
-    welcomemsg = '''
-_ _
-**Welcome to the Death Jesters & Zeroes to Heroes community!**
 
-
-'''
     access_control = [
         "662119191452844042", # djzth #access_control
     ]
@@ -80,6 +75,13 @@ _ _
     [production.dad_jokes]
         channel = "271295308506464276" # djzth #dad_joke_central
         rapidapikey = ""
+    [production.linkedroles]
+        "963448831805124668" = "1181467394577805452" # Normal Tank
+        "963448563835224085" = "1181467394577805452" # Normal Healer
+        "963448755330383922" = "1181467394577805452" # Normal DPS
+        "859660144308256848" = "1181467503310938152" # Heroic Tank
+        "859659862958276659" = "1181467503310938152" # Heroic Healer
+        "859660097461157921" = "1181467503310938152" # Heroic DPS
     [production.suggestionChannels]
         "Team Rocket" = "912844780109725746"
         "Community Leadership" = "271341649131470849"
