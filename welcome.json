@@ -1,0 +1,44 @@
+{
+  "content": "_ _\n**Welcome to the *Death Jesters & Zeroes to Heroes* community!**\n_  _",
+  "embeds": [
+    {
+      "title": "IMPORTANT!!",
+      "description": "*We want you to get the best value you can out of our community, and doing so requires you to review some additional steps:*\n\n_  _",
+      "color": 15623799,
+      "fields": [
+        {
+          "name": "Follow channels and categories of interest",
+          "value": "- Go check out the <id:browse> menu and select any of your interests. Make sure to follow the categories to see any new channels that are added in the future!"
+        },
+        {
+          "name": "Choose pingable roles",
+          "value": "- Visit the <#676924129076576263> channel and choose any roles for which you'd like to receive notifications."
+        },
+        {
+          "name": "Getting In Game Invites",
+          "value": "- Use the [ticketing system](https://discord.com/channels/231141125359009793/523555986343198728/1182131054769881158) for any in game invites you might need. There is also a ticket for having your Discord nickname changed to match your in game name. It's important that these match so we can recognize who you are!"
+        }
+      ]
+    },
+    {
+      "title": "Additional Information",
+      "color": 6737134,
+      "fields": [
+        {
+          "name": "About Us & Rules",
+          "value": "- You can read the [message](https://discord.com/channels/231141125359009793/523555986343198728/1132193921238323241) in our <#523555986343198728> channel if you haven't already to get a brief introduction to the community, what we are about, and our very simple set of rules to maintain a pleasant and harmonious atmosphere both in Discord and in game."
+        },
+        {
+          "name": "Organized Raid Teams",
+          "value": "- Check out the <#725788225230340097> channel and feel free to inquire to any of those contacts about joining their teams, or hit the [LFRT ticket](https://discord.com/channels/231141125359009793/725788225230340097/1132194877577363527) to get a little extra help from our liaison team."
+        }
+      ]
+    },
+    {
+      "title": "Questions?",
+      "description": "If you have any questions feel free to ask in the server, or here in this private thread where one of our friendly <@&1172578109032255558> will be happy to assist you!\n\nYou can leave this thread at any time, or it will auto-archive in three days.\n\n*If you have a moment, please help us better this community by responding to this [short survey](<https://cryptpad.zthcommunity.com/form/#/2/form/view/os3k4bqFjVoiVfNlO3KIdwoUPA1UVpxQBlgWMwvd+Co/embed/>) so we can learn how to better ourselves.*",
+      "color": 2263091
+    }
+  ],
+  "attachments": []
+}

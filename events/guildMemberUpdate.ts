@@ -10,6 +10,7 @@ import {
     ThreadAutoArchiveDuration
 } from "discord.js";
 import {client, myLog, updateStatus} from "../index";
+import * as fs from "fs";
 
 const linkedroles: (string | [string, unknown])[] = []
 Object.entries(config.linkedroles).forEach((entry) => {
@@ -95,14 +96,15 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
         'Aloha',
         'Ahoy'
     ];
-    const msg = `### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\n${config.welcomemsg}`;
+    const msg = `### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\n`;
     member.guild.channels.fetch(config.welcomechannel).then(thisChan => {
         if (thisChan && thisChan.type === ChannelType.GuildText) {
+            const welcomeMessage = JSON.parse(fs.readFileSync('./welcome.json', 'utf8'));
             thisChan.send({
                 allowedMentions: {
                     users: [member.id]
                 },
-                content: `<@${executor.id}> has welcomed a new member!\nSay "${greeting[(Math.floor(Math.random() * greeting.length))]}" to <@${member.id}>!`
+                content: `<@${executor.id}> has welcomed a new member!\nSay "${greeting[(Math.floor(Math.random() * greeting.length))]}" to <@${member.id}>!`,
             }).catch(myLog);
             thisChan.threads.create({
                 name: `Welcome ${member.displayName}!`,
@@ -110,7 +112,10 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
                 type: ChannelType.PrivateThread
             }).then(thisThread =>{
                 myLog(thisThread);
-                thisThread.send(msg).catch(myLog);
+                thisThread.send({
+                    content: msg + welcomeMessage.content,
+                    embeds: welcomeMessage.embeds
+                }).catch(myLog);
                 thisThread.members.add(member.id).catch(myLog);
             }).catch(myLog);
         }
