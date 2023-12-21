@@ -96,7 +96,7 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
         'Aloha',
         'Ahoy'
     ];
-    const msg = `### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\n`;
+    const msg = `_ _\n### ${greeting[(Math.floor(Math.random() * greeting.length))]}, <@${member.id}>!\n`;
     member.guild.channels.fetch(config.welcomechannel).then(thisChan => {
         if (thisChan && thisChan.type === ChannelType.GuildText) {
             const welcomeMessage = JSON.parse(fs.readFileSync('./welcome.json', 'utf8'));
