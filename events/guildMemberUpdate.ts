@@ -117,6 +117,9 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
                     embeds: welcomeMessage.embeds
                 }).catch(myLog);
                 thisThread.members.add(member.id).catch(myLog);
+                thisThread.send(`<@&${config.welcomewagonrole}>`).then((thismsg) => {
+                    thismsg.delete().catch(myLog);
+                })
             }).catch(myLog);
         }
     }).catch(myLog);
