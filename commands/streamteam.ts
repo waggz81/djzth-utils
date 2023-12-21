@@ -5,7 +5,7 @@ import * as http from "https";
 import {myLog} from "../index";
 
 let token: string = '';
-const teamName:string = "djsandzth";
+const teamName:string = config.streamteamname;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -25,11 +25,19 @@ module.exports = {
         let name: string = "";
         let game: string = "";
         let viewers: string = "";
-        streamers.forEach((element) => {
-            name += `[${element.name}](https://www.twitch.tv/${element.login})\n`;
-            game += `${element.game}\n`;
-            viewers += `${element.viewers}\n`;
-        });
+        if (streamers.length) {
+            streamers.forEach((element) => {
+                name += `[${element.name}](https://www.twitch.tv/${element.login})\n`;
+                game += `${element.game}\n`;
+                viewers += `${element.viewers}\n`;
+            });
+
+        }
+        else {
+                name = "No streamers live";
+                game = " ";
+                viewers = " ";
+        }
         embed.addFields(
             {name: 'Twitch Name', value: name, inline: true},
             {name: 'Game', value: game, inline: true},
@@ -68,6 +76,7 @@ async function getToken(): Promise<boolean> {
             const body = JSON.parse(chunk);
             if (body.access_token) {
                 token = body.access_token;
+                // console.log(token)
             }
         });
         res.on('end', () => {
@@ -165,8 +174,6 @@ async function getLiveStreamers(memberIDs: {
     for (let i = 0; i < maxlength; i++) {
         querystring += `user_id=${memberIDs[i].user_id}&`;
     }
-
-    // return (querystring.slice(0,-1))
 
     const options = {
         hostname: 'api.twitch.tv',
