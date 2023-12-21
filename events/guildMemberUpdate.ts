@@ -124,3 +124,4 @@ export function welcomeNewMember(member: GuildMember, executor: GuildMember) {
         }
     }).catch(myLog);
 }
+
