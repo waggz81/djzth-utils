@@ -87,6 +87,7 @@ client.once(Events.ClientReady, async c => {
     });
     require('./web');
     require('./scheduler');
+    updateStatus();
 });
 
 client.login(config.token)
