@@ -12,7 +12,7 @@ module.exports = {
         .setDescription("When does Gnomeregan reset for Classic Season of Discovery?"),
 
     async execute(interaction : CommandInteraction) {
-        let resettime = dayjs.unix(1708441200);
+        let resettime = dayjs.unix(1708614000);
         let lastreset = resettime;
         const now = dayjs();
         while (now > resettime) {
