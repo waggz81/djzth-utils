@@ -34,9 +34,15 @@ client.on(Events.ThreadCreate, async thread => {
                         submitter = member;
                     })
                 }
-                const submitterNickname = submitter?.nickname ? submitter.nickname : submitter?.displayName;
+                let submitterNickname = submitter?.nickname ? submitter.nickname : submitter?.displayName;
+                const nameCheck = /(.*?)[\s\,\-\/\("]/;
+                const match = submitterNickname?.match(nameCheck);
+                if (match) {
+                    console.log(match)
+                    submitterNickname = match[1];
+                }
                 const notesEmbed = new EmbedBuilder()
-                    .setTitle('Copy & Paste')
+                    .setTitle('Copy & Paste for Inviters')
                     .addFields(
                         { name: 'Character', value: `\`${nameAndRealm}\`` },
                         { name: 'Guild Note', value: `\`[XFa:${submitterNickname}]\``},
@@ -47,7 +53,7 @@ client.on(Events.ThreadCreate, async thread => {
                 let missingGeneralAccessRole = false;
                 if (!submitter?.roles.cache.has(config.generalaccessrole)) {
                     const noGeneralAccessWarningEmbed = new EmbedBuilder()
-                        .setTitle('WARNING:')
+                        .setTitle('WARNING')
                         .setDescription('Submitter is missing the Community Member role. Ensure a Discord Access Ticket is opened.')
                         .setColor('Red');
                     thread.send({embeds: [noGeneralAccessWarningEmbed]});
@@ -55,7 +61,7 @@ client.on(Events.ThreadCreate, async thread => {
                 }
                 if (!submitter?.nickname && !missingGeneralAccessRole) {
                     const noServerNameWarningEmbed = new EmbedBuilder()
-                        .setTitle('WARNING:')
+                        .setTitle('WARNING')
                         .setDescription('Submitter is missing a server nickname. Notify Senior Community Leaders.')
                         .setColor('Red');
                     thread.send({embeds: [noServerNameWarningEmbed]});
