@@ -1,5 +1,5 @@
 import {config} from "../config";
-import {EmbedBuilder, Events, ThreadAutoArchiveDuration} from "discord.js";
+import {EmbedBuilder, Events, ThreadAutoArchiveDuration, ForumChannel} from "discord.js";
 import {client, myLog, thisServer} from "../index";
 
 client.on(Events.ThreadCreate, async thread => {
@@ -80,6 +80,10 @@ client.on(Events.ThreadCreate, async thread => {
             }, 1000 * 3);
             thread.send(forums[thread.parentId]).catch(myLog);
             thread.setAutoArchiveDuration(ThreadAutoArchiveDuration.OneWeek).catch(myLog);
+
+            // Auto tag the thread with Pending tag
+            const tag = (thread.parent as ForumChannel).availableTags.find(t => t.name.toLowerCase() === "pending");
+            if (tag) await thread.setAppliedTags([tag], "Thread Created").catch(myLog);
         }
     }
 });
