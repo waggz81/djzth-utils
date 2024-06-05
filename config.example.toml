@@ -87,6 +87,10 @@
         "Community Leadership" = "271341649131470849"
     [production.forum_post_auto_mention_roles]
         1027625066986475580 = "<@&748569132575883436>"
+    [production.forum_post_auto_apply_tags]
+        1027625066986475580 = [
+            "Pending",
+        ]
     [production.auditLogChannels]
         "channel" = "1061694562537574490"
         "voice" = "1061694861998297178"
