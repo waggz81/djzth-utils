@@ -1,5 +1,5 @@
 import {config} from "../config";
-import {EmbedBuilder, Events, ThreadAutoArchiveDuration} from "discord.js";
+import {EmbedBuilder, Events, ThreadAutoArchiveDuration, ForumChannel, Snowflake} from "discord.js";
 import {client, myLog, thisServer} from "../index";
 
 client.on(Events.ThreadCreate, async thread => {
@@ -70,16 +70,33 @@ client.on(Events.ThreadCreate, async thread => {
         }, 1000 * 3);
     }
     // dj application auto mentions
-    const forums = config.forum_post_auto_mention_roles;
+    const forumsautomention = config.forum_post_auto_mention_roles;
     if (thread.parentId) {
-        if (forums[thread.parentId]) {
+        if (forumsautomention[thread.parentId]) {
             setTimeout(() => {
                 thread.messages.fetch().then(msgs => {
                     msgs.last()?.pin();
                 }).catch(myLog);
             }, 1000 * 3);
-            thread.send(forums[thread.parentId]).catch(myLog);
+            thread.send(forumsautomention[thread.parentId]).catch(myLog);
             thread.setAutoArchiveDuration(ThreadAutoArchiveDuration.OneWeek).catch(myLog);
+
+
         }
     }
+    // Auto tag the thread with Pending tags
+    const forumsautoapplytag = config.forum_post_auto_apply_tags;
+    if (thread.parentId) {
+        if (forumsautoapplytag[thread.parentId]) {
+            const autotags: Snowflake[] = []
+            forumsautoapplytag[thread.parentId].forEach((thistag: string) => {
+                const tag = (thread.parent as ForumChannel).availableTags.find(t => t.name.toLowerCase() === thistag.toLowerCase())?.id ;
+                if (tag) {
+                    autotags.push(tag as Snowflake);
+                }
+            })
+            await thread.setAppliedTags(autotags, "Thread Created").catch(myLog);
+        }
+    }
+
 });
