@@ -1,15 +1,11 @@
-import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
 import {Colors, CommandInteraction, EmbedBuilder} from "discord.js";
 import {myLog} from "../index";
-import dayjs = require("dayjs");
 
-
-var utc = require('dayjs/plugin/utc')
-var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+import * as utc from 'dayjs/plugin/utc'
+import * as dayjs from 'dayjs'
 
 dayjs.extend(utc)
-dayjs.extend(timezone)
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,15 +13,18 @@ module.exports = {
         .setDescription("When does the weekly/daily reset for Retail WoW happen?"),
 
     async execute(interaction : CommandInteraction) {
-        let weeklyresettime = dayjs.unix(1702393200);
-        let dailyresettime = weeklyresettime;
-        const now = dayjs();
-        while (now > weeklyresettime) {
-            weeklyresettime = weeklyresettime.add(7,'d');
+        let now = dayjs.utc();
+        let dailyresettime = dayjs.utc();
+        let weeklyresettime = dayjs.utc();
+        const weeklyresetday = 2;
+        const resethour = 15; // utc
+        if (now.hour() >= resethour) {
+            now = now.add(1,"day");
         }
-        while (now > dailyresettime) {
-            dailyresettime = dailyresettime.add(1,'d');
-        }
+        const midweek = now.day() > weeklyresetday ? 7 : 0;
+        dailyresettime = dayjs.utc(now.set("hour", resethour).set("minutes", 0)).utc();
+        weeklyresettime = dayjs.utc(now.add(midweek - now.day() + weeklyresetday, 'd').set("hour", resethour).set("minutes", 0));
+
         const embed = new EmbedBuilder({
             title: `WoW Retail Resets:`,
             description: ``,
