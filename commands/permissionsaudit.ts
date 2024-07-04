@@ -13,7 +13,7 @@ import {
     ThreadChannel
 } from "discord.js";
 import * as fs from "fs";
-import * as converter from "json-2-csv";
+import { Parser } from "@json2csv/plainjs";
 import {myLog} from "../index";
 
 module.exports = {
@@ -66,11 +66,11 @@ module.exports = {
 
             if (permissionsData.length) {
                 // convert JSON array to CSV string
-                converter.json2csv(permissionsData, (err, csv) => {
-                    if (err) {
-                        throw err;
-                    }
-
+                try {
+                    const opts = {};
+                    const parser = new Parser(opts);
+                    const csv = parser.parse(permissionsData);
+                    console.log(csv);
                     // write CSV to a file
                     fs.writeFile(thisChan.name + '_permissionOverrides.csv', csv as string, (error) => {
                         if (!error) {
@@ -78,7 +78,10 @@ module.exports = {
                             interaction.reply({ephemeral: true, files: [file]});
                         }
                     })
-                })
+                } catch (err) {
+                    console.error(err);
+                }
+
             } else {
                 await interaction.reply({content: "No Permission Overrides for #" + thisChan.name, ephemeral: true});
             }
