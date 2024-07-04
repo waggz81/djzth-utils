@@ -24,9 +24,9 @@ const currentDungeons: string[][] = [
     ["Throne of the Tides", "TOTT"],
     ["Waycrest ManorWaycrest Manor", "WM"],
 ]
-const choices: [name: string, value: string][] = [];
+const choices: {name: string, value: string}[] = [];
 currentDungeons.forEach((entry) => {
-    choices.push([entry[0],entry[0]])
+    choices.push({name: entry[0], value: entry[0]})
 })
 module.exports = {
     data: new SlashCommandBuilder()
