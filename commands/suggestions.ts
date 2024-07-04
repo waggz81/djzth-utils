@@ -1,6 +1,7 @@
 import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {APIApplicationCommandOptionChoice,
+import {
+    APIApplicationCommandOptionChoice, ChatInputCommandInteraction,
     Colors,
     CommandInteraction,
     EmbedBuilder,
@@ -30,30 +31,31 @@ module.exports = {
                 .setDescription('What is your suggestion?')
                 .setRequired(true)),
 
-    async execute(interaction : CommandInteraction) {
-        const embed = new EmbedBuilder({
-            title: `New Suggestion for <${interaction.options.getString('team')}>`,
-            description: interaction.options.getString('suggestion'),
-            color: Colors.Blue,
-            footer: {
-                "text": "Suggested by: " + (interaction.member as GuildMember).user.tag + " (" + (interaction.member as GuildMember).displayName + ")"
-            },
-            timestamp: Date.now()
-        })
-        const chanID = config.suggestionChannels[interaction.options.getString('team')]
-        await interaction.deferReply({ephemeral: true});
-        (interaction.guild?.channels.cache.get(chanID) as TextChannel)?.send({
-            content: "_ _",
-            embeds: [embed]
-        })
-            .then(() => {
-                interaction.editReply({content: "Suggestion submitted!", embeds: [embed]})
-            })
-            .catch((err) => {
-                myLog(err)
-                interaction.editReply({content: "Error: Notify Waggz"})
+    async execute(interaction : ChatInputCommandInteraction) {
+            const chanID = config.suggestionChannels[interaction.options.getString('team')!.valueOf()]
+            const embed = new EmbedBuilder({
+                title: `New Suggestion for <${interaction.options.getString('team')}>`,
+                description: interaction.options.getString('suggestion')?.valueOf(),
+                color: Colors.Blue,
+                footer: {
+                    "text": "Suggested by: " + (interaction.member as GuildMember).user.tag + " (" + (interaction.member as GuildMember).displayName + ")"
+                },
+                timestamp: Date.now()
             })
 
-    }
+            await interaction.deferReply({ephemeral: true});
+            (interaction.guild?.channels.cache.get(chanID) as TextChannel)?.send({
+                content: "_ _",
+                embeds: [embed]
+            })
+                .then(() => {
+                    interaction.editReply({content: "Suggestion submitted!", embeds: [embed]})
+                })
+                .catch((err) => {
+                    myLog(err)
+                    interaction.editReply({content: "Error: Notify Waggz"})
+                })
+        }
+
 };
 

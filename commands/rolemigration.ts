@@ -1,4 +1,4 @@
-import {memberNicknameMention, SlashCommandBuilder} from "@discordjs/builders";
+import {SlashCommandBuilder} from "@discordjs/builders";
 import {CommandInteraction, PermissionsBitField, Role} from "discord.js";
 
 
