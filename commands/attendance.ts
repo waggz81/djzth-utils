@@ -24,7 +24,7 @@ const teamInfo: any[] = [];
 if (typeof (config.absences) !== undefined) {
     for (const element of Object.entries(config.absences)) {
         // @ts-ignore
-        teams.push([element[1].team, element[0]]);
+        teams.push({ name: element[1].team, value: element[0]});
         // @ts-ignore
         teamInfo[element[0]] = {
             // @ts-ignore

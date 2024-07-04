@@ -1,11 +1,19 @@
 import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {Colors, CommandInteraction, EmbedBuilder, GuildMember, Message, MessagePayload, TextChannel} from "discord.js";
+import {APIApplicationCommandOptionChoice,
+    Colors,
+    CommandInteraction,
+    EmbedBuilder,
+    GuildMember,
+    Message,
+    MessagePayload,
+    TextChannel
+} from "discord.js";
 import {myLog} from "../index";
 
-const teams: any[] = []
+const teams: APIApplicationCommandOptionChoice<string> | { name: string; value: string; }[] = []
 for (const element of Object.entries(config.suggestionChannels)) {
-    teams.push([element[0],element[0]]);
+    teams.push({ name: element[0], value: element[0]});
 }
 
 module.exports = {
@@ -24,15 +32,15 @@ module.exports = {
 
     async execute(interaction : CommandInteraction) {
         const embed = new EmbedBuilder({
-            title: `New Suggestion for <${interaction.options.get('team')?.value as string}>`,
-            description: interaction.options.get('suggestion')?.value as string,
+            title: `New Suggestion for <${interaction.options.getString('team')}>`,
+            description: interaction.options.getString('suggestion'),
             color: Colors.Blue,
             footer: {
                 "text": "Suggested by: " + (interaction.member as GuildMember).user.tag + " (" + (interaction.member as GuildMember).displayName + ")"
             },
             timestamp: Date.now()
         })
-        const chanID = config.suggestionChannels[interaction.options.get('team')?.value as string]
+        const chanID = config.suggestionChannels[interaction.options.getString('team')]
         await interaction.deferReply({ephemeral: true});
         (interaction.guild?.channels.cache.get(chanID) as TextChannel)?.send({
             content: "_ _",

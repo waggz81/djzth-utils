@@ -1,13 +1,13 @@
-import {SlashCommandBuilder} from "@discordjs/builders";
-import {CommandInteraction, EmbedBuilder, GuildMember} from "discord.js";
+import {SlashCommandBuilder, SlashCommandStringOption} from "@discordjs/builders";
+import {APIApplicationCommandOptionChoice, CommandInteraction, EmbedBuilder, GuildMember} from "discord.js";
 import {myLog, raidTeamInfoChannel, raidTeamInfoPosts} from "../index";
 import {config} from "../config";
 
 
-const choices: (string | null)[][] = [];
+const choices: APIApplicationCommandOptionChoice<string> | { name: string; value: string; }[] = [];
 raidTeamInfoPosts.forEach(post => {
-    if (post.embeds[0]) {
-        choices.push([post.embeds[0].title, post.id])
+    if (post.embeds[0] && post.embeds[0].title && post.id) {
+        choices.push({ name: post.embeds[0].title, value: post.id})
     }
 })
 
@@ -53,11 +53,11 @@ module.exports = {
                     option.setName('game')
                         .setDescription('game')
                         .setRequired(false)
-                        .addChoices([
-                            ['Retail', 'retail'],
-                            ['Classic', 'classic'],
-                            ['FFXIV', 'ffxiv']
-                        ])))
+                        .addChoices(
+                            {name: 'Retail', value: 'retail'},
+                            {name:'Classic', value: 'classic'},
+                            {name:'FFXIV', value: 'ffxiv'}
+                        )))
 
         .addSubcommand(subcommand =>
             subcommand
@@ -95,11 +95,10 @@ module.exports = {
                     option.setName('game')
                         .setDescription('game')
                         .setRequired(true)
-                        .addChoices([
-                            ['Retail', 'retail'],
-                            ['Classic', 'classic'],
-                            ['FFXIV', 'ffxiv']
-                        ]))
+                        .addChoices(
+                            {name: 'Retail', value: 'retail'},
+                            {name:'Classic', value: 'classic'},
+                            {name:'FFXIV', value: 'ffxiv'}))
         ),
 
     async execute(interaction: CommandInteraction) {
