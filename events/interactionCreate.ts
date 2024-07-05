@@ -9,6 +9,7 @@ import {
     NoSubscriberBehavior
 } from '@discordjs/voice';
 import {createReadStream} from "node:fs";
+import * as fs from "node:fs";
 
 client.on(Events.InteractionCreate, interaction => {
     if (!interaction.isButton()) return;
@@ -51,7 +52,8 @@ client.on(Events.InteractionCreate, interaction => {
             const player = createAudioPlayer();
             if (connection) {
                 const subscription = connection.subscribe(player);
-                const resource = createAudioResource('./public/audio/level-up-191997.mp3', { inlineVolume: true });
+                const files = fs.readdirSync('./public/audio/buzzer');
+                const resource = createAudioResource(`./public/audio/buzzer/${files[Math.floor(Math.random()*files.length)] }`, { inlineVolume: true });
                 player.play(resource);
             }
         }

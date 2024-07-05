@@ -6,8 +6,9 @@ import {
     ChatInputCommandInteraction,
     EmbedBuilder,
 } from "discord.js";
-import {myLog} from "../index";
+import {myLog, thisServer} from "../index";
 import {joinVoiceChannel} from "@discordjs/voice";
+import {config} from "../config";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,6 +29,9 @@ module.exports = {
         )
     ,
     async execute(interaction: ChatInputCommandInteraction) {
+        if (!thisServer.members.cache.get(interaction.user.id)?.roles.cache.has(config.moderatorrole)) {
+            await interaction.reply({content: "You do not have permission to use this command.", ephemeral: true});
+        }
         const chan = interaction.options.getChannel('channel')!;
         const panel = new EmbedBuilder()
             .setTitle("Buzzer Panel")
