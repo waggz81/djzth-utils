@@ -1,11 +1,60 @@
 import {EmbedPagination} from "../embedPagination";
 import {client, myLog} from "../index";
-import {Events} from "discord.js";
+import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Events} from "discord.js";
+import {
+    AudioPlayerStatus,
+    createAudioPlayer,
+    createAudioResource, generateDependencyReport,
+    getVoiceConnection,
+    NoSubscriberBehavior
+} from '@discordjs/voice';
+import {createReadStream} from "node:fs";
 
 client.on(Events.InteractionCreate, interaction => {
     if (!interaction.isButton()) return;
     if (interaction.customId.startsWith("nextEmbedPage") || interaction.customId.startsWith("previousEmbedPage")) {
         EmbedPagination(interaction).catch(myLog);
+    }
+    if (interaction.customId.startsWith("buzzerButton")) {
+        const time = Math.floor(Date.now() / 1000);
+        const delay = Number(interaction.customId.split(':-:')[1]);
+        let panel = new EmbedBuilder()
+            .setTitle("Buzzer Panel")
+            .setDescription(`Buzzer pressed by <@${interaction.user.id}>`)
+            .setFooter({text: `Buzzer will reset after ${delay} seconds`})
+        let buzzButton = new ButtonBuilder()
+            .setCustomId('buzz')
+            .setLabel('Buzz!')
+            .setCustomId('buzzerButton')
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(true);
+        let row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(buzzButton);
+        interaction.message.edit({embeds: [panel], components: [row]});
+        setTimeout(function() {
+            panel = new EmbedBuilder()
+                .setTitle("Buzzer Panel")
+                .setDescription(`Buzzer ready!`)
+            buzzButton = new ButtonBuilder()
+                .setLabel('Buzz!')
+                .setCustomId(`buzzerButton:-:${delay}`)
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false);
+            row = new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(buzzButton);
+            interaction.message.edit({embeds: [panel], components: [row]});
+        }, delay * 1000);
+        interaction.deferUpdate();
+        if (interaction.channel) {
+            interaction.channel.send(`<@${interaction.user.id}> buzzed in <t:${time}:R>!`);
+            const connection = getVoiceConnection(interaction.guildId!);
+            const player = createAudioPlayer();
+            if (connection) {
+                const subscription = connection.subscribe(player);
+                const resource = createAudioResource('./public/audio/level-up-191997.mp3', { inlineVolume: true });
+                player.play(resource);
+            }
+        }
     }
 });
 
