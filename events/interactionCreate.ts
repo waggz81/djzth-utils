@@ -43,7 +43,8 @@ client.on(Events.InteractionCreate, interaction => {
                 .setDisabled(false);
             row = new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(buzzButton);
-            interaction.message.edit({embeds: [panel], components: [row]});
+            interaction.message.channel.send({embeds: [panel], components: [row]});
+            interaction.message.delete();
         }, delay * 1000);
         interaction.deferUpdate();
         if (interaction.channel) {
