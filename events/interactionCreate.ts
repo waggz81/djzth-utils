@@ -40,7 +40,8 @@ client.on(Events.InteractionCreate, interaction => {
         if (connection) {
             const subscription = connection.subscribe(player);
             const files = fs.readdirSync('./public/audio/buzzer');
-            const resource = createAudioResource(`./public/audio/buzzer/${files[Math.floor(Math.random()*files.length)] }`, { inlineVolume: true });
+            // const resource = createAudioResource(`./public/audio/buzzer/${files[Math.floor(Math.random()*files.length)] }`, { inlineVolume: true });
+            const resource = createAudioResource(`./public/audio/buzzer/level-up-191997.mp3`, { inlineVolume: true });
             player.play(resource);
         }
         setTimeout(function() {
@@ -56,7 +57,8 @@ client.on(Events.InteractionCreate, interaction => {
                 .addComponents(buzzButton);
             interaction.message.channel.send({embeds: [panel], components: [row]});
             interaction.message.delete();
-            const resource = createAudioResource('./public/audio/buzzer/wrong-47985.mp3', {inlineVolume:true});
+            const resource = createAudioResource('./public/audio/buzzer/wrong/wrong-47985.mp3', {inlineVolume:true});
+            resource.volume?.setVolume(0.6)
             player.play(resource);
         }, delay * 1000);
         interaction.deferUpdate();
