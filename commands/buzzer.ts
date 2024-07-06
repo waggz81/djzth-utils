@@ -47,7 +47,10 @@ module.exports = {
                 .then((res) => {
                     interaction.reply({content: `Buzzer panel created in ${res.url}`, ephemeral: true})
                 })
-                .catch((err)=>{myLog(err)})
+                .catch((err)=>{
+                    myLog(err);
+                    interaction.reply("Unable to send a message in that channel!")
+                })
         }
         const connection = joinVoiceChannel({
             channelId: chan.id,
