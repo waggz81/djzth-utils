@@ -32,6 +32,17 @@ client.on(Events.InteractionCreate, interaction => {
         let row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(buzzButton);
         interaction.message.edit({embeds: [panel], components: [row]});
+        if (interaction.channel) {
+            interaction.channel.send(`<@${interaction.user.id}> buzzed in <t:${time}:R>!`);
+        }
+        const connection = getVoiceConnection(interaction.guildId!);
+        const player = createAudioPlayer();
+        if (connection) {
+            const subscription = connection.subscribe(player);
+            const files = fs.readdirSync('./public/audio/buzzer');
+            const resource = createAudioResource(`./public/audio/buzzer/${files[Math.floor(Math.random()*files.length)] }`, { inlineVolume: true });
+            player.play(resource);
+        }
         setTimeout(function() {
             panel = new EmbedBuilder()
                 .setTitle("Buzzer Panel")
@@ -45,19 +56,11 @@ client.on(Events.InteractionCreate, interaction => {
                 .addComponents(buzzButton);
             interaction.message.channel.send({embeds: [panel], components: [row]});
             interaction.message.delete();
+            const resource = createAudioResource('./public/audio/buzzer/wrong-47985.mp3', {inlineVolume:true});
+            player.play(resource);
         }, delay * 1000);
         interaction.deferUpdate();
-        if (interaction.channel) {
-            interaction.channel.send(`<@${interaction.user.id}> buzzed in <t:${time}:R>!`);
-            const connection = getVoiceConnection(interaction.guildId!);
-            const player = createAudioPlayer();
-            if (connection) {
-                const subscription = connection.subscribe(player);
-                const files = fs.readdirSync('./public/audio/buzzer');
-                const resource = createAudioResource(`./public/audio/buzzer/${files[Math.floor(Math.random()*files.length)] }`, { inlineVolume: true });
-                player.play(resource);
-            }
-        }
+
     }
 });
 
