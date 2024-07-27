@@ -29,8 +29,16 @@ client.on(Events.InteractionCreate, interaction => {
             .setCustomId('buzzerButton')
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(true);
+        const correctButton = new ButtonBuilder()
+            .setCustomId('correct')
+            .setLabel('Correct')
+            .setStyle(ButtonStyle.Success);
+        const incorrectButton = new ButtonBuilder()
+            .setCustomId('incorrect')
+            .setLabel('Inorrect')
+            .setStyle(ButtonStyle.Danger);
         let row = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(buzzButton);
+            .addComponents([buzzButton, correctButton, incorrectButton]);
         interaction.message.edit({embeds: [panel], components: [row]});
         if (interaction.channel) {
             interaction.channel.send(`<@${interaction.user.id}> buzzed in <t:${time}:R>!`);
@@ -64,6 +72,7 @@ client.on(Events.InteractionCreate, interaction => {
         interaction.deferUpdate();
 
     }
+
 });
 
 client.on(Events.InteractionCreate, async interaction => {
