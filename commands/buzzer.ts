@@ -35,8 +35,8 @@ module.exports = {
         const chan = interaction.options.getChannel('channel')!;
         const panel = new EmbedBuilder()
             .setTitle("Buzzer Panel")
+            .setDescription(`By <@${interaction.user.id}>`)
         const buzzButton = new ButtonBuilder()
-            .setCustomId('buzz')
             .setLabel('Buzz!')
             .setCustomId(`buzzerButton:-:${interaction.options.getInteger('delay')!}`)
             .setStyle(ButtonStyle.Primary);
