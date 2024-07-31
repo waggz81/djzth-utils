@@ -36,6 +36,10 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
                 changedroles += `~~_${role.name}_~~ removed\n`;
                 rolechanges = true;
             }
+            const thisRole = role.id;
+            if (!newMember.roles.cache.has(role.id) && config.linkedroles[thisRole]) {
+                newMember.roles.remove(config.linkedroles[thisRole]).catch(myLog);
+            }
         });
         newMember.roles.cache.forEach(role => {
             if (!oldMember.roles.cache.has(role.id) && !ignoredroles.includes(role.id)) {

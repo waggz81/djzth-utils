@@ -11,7 +11,7 @@ import {
     TextChannel
 } from "discord.js";
 import {REST} from "@discordjs/rest";
-import {Routes} from "discord-api-types/v9";
+import {Routes} from "discord-api-types/v10";
 import * as fs from "fs";
 import {config} from "./config";
 import * as path from "path";
@@ -132,7 +132,7 @@ export async function refreshCommands(guild: Guild, forcedRefresh: boolean) {
             }
         }).then(() => {
         // push the slash commands
-        const rest = new REST({version: '9'}).setToken(config.token);
+        const rest = new REST({version: '10'}).setToken(config.token);
         try {
             rest.put(
                 Routes.applicationGuildCommands(client.user!.id, guild.id),
