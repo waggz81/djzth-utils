@@ -37,6 +37,7 @@ const job = schedule.scheduleJob(
 truncateKeystones(getLastReset());
 myLog(`Scheduled job: ${job.name}`);
 
+/*
 const dadjokejob = schedule.scheduleJob(
     "dadjokes",
     {
@@ -49,6 +50,7 @@ const dadjokejob = schedule.scheduleJob(
     }
 );
 myLog(`Scheduled job: ${dadjokejob.name}`);
+*/
 
 function cleanupAttendancePosts() {
     const teams: any[] = [];
