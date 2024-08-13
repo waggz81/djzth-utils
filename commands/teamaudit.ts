@@ -1,8 +1,15 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {APIApplicationCommandOptionChoice, APIEmbedField, CommandInteraction, EmbedBuilder} from "discord.js";
+import {
+    APIApplicationCommandOptionChoice,
+    APIEmbedField,
+    CommandInteraction,
+    EmbedBuilder,
+    GuildMember
+} from "discord.js";
 import {config} from "../config";
-import {myLog, thisServer} from "../index";
+import {myLog} from "../index";
 import * as https from "https";
+import {hasRaidLeaderRole} from "../helpers";
 
 const choices: APIApplicationCommandOptionChoice<string> | { name: string; value: string; }[] = [];
 const teams: { team: string, gowID: string, gowAPIkey: string }[] = config.gowteams;
@@ -21,15 +28,8 @@ module.exports = {
             .setRequired(true)
             .addChoices(choices)), async execute(interaction: CommandInteraction) {
         await interaction.deferReply({ephemeral: true});
-        let allowed = false;
-        thisServer.members.cache.get(interaction.user.id)?.roles.cache.forEach((role) => {
-            console.log(role.id, role.name)
-            if (config.raidteamleaderroles.includes(role.id)) {
-                console.log("match")
-                allowed = true;
-            }
-        })
-        if (!allowed) {
+
+        if (!hasRaidLeaderRole(interaction.member as GuildMember)) {
             await interaction.editReply({content: "You do not have permission to use this command"});
             return;
         }
@@ -107,7 +107,7 @@ module.exports = {
 };
 
 function auditTeam(teamID: { team: string, gowID: string, gowAPIkey: string }) {
-    const customPromise = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         const options = new URL(`https://api.guildsofwow.com/roster/list?apiKey=${teamID.gowAPIkey}&team=${teamID.gowID}`);
         https.get(options, resp => {
             let data = "";
@@ -126,5 +126,4 @@ function auditTeam(teamID: { team: string, gowID: string, gowAPIkey: string }) {
             });
         })
     });
-    return customPromise;
 }
