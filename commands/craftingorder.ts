@@ -1,4 +1,4 @@
-import {SlashCommandBuilder} from "@discordjs/builders";
+import {embedLength, SlashCommandBuilder} from "@discordjs/builders";
 import {
     ActionRowBuilder,
     APIEmbedField,
@@ -32,20 +32,15 @@ module.exports = {
             .setDescription("The profession you want to search in")
             .setRequired(true)
             .addChoices({name: "Alchemy", value: "Alchemy"}, {
-                name: "Blacksmithing",
-                value: "Blacksmithing"
+                name: "Blacksmithing", value: "Blacksmithing"
             }, {name: "Enchanting", value: "Enchanting"}, {
-                name: "Engineering",
-                value: "Engineering"
+                name: "Engineering", value: "Engineering"
             }, {name: "Herbalism", value: "Herbalism"}, {
-                name: "Inscription",
-                value: "Inscription"
+                name: "Inscription", value: "Inscription"
             }, {name: "Jewelcrafting", value: "Jewelcrafting"}, {
-                name: "Leatherworking",
-                value: "Leatherworking"
+                name: "Leatherworking", value: "Leatherworking"
             }, {name: "Mining", value: "Mining"}, {name: "Skinning", value: "Skinning"}, {
-                name: "Tailoring",
-                value: "Tailoring"
+                name: "Tailoring", value: "Tailoring"
             }))
         .addStringOption(option => option.setName('search')
             .setDescription('The recipe you want to search for')
@@ -62,9 +57,13 @@ module.exports = {
                     where profession_name = ?
                     and recipe_name LIKE ?`, [interaction.options.get('profession')?.value, `%${interaction.options.get('search')?.value}%`], function (err: Error, results: any) {
             if (err) {
-                console.log(err)
+                myLog(err)
             } else {
                 console.log(results);
+                if (results.length === 0) {
+                    interaction.editReply({content: "No results. Please try again with a different search term."});
+                    return;
+                }
                 let count: number = 0;
                 const selectMenu = new StringSelectMenuBuilder().setCustomId('recipesearch');
                 let selectMenuOptions: Array<StringSelectMenuOptionBuilder> = [];
@@ -81,9 +80,7 @@ module.exports = {
                 console.log(selectMenuOptions);
                 selectMenu.addOptions(selectMenuOptions)
                 embed.addFields({name: "Recipes", value: recipesNames, inline: true}, {
-                    name: "Profession",
-                    value: recipesProf,
-                    inline: true
+                    name: "Profession", value: recipesProf, inline: true
                 })
                 const embeds: EmbedBuilder[] = [];
                 embeds.push(embed);
@@ -109,16 +106,21 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
     }
     if (interaction.isButton()) {
-        if (interaction.customId !== 'recipesearch') return;
+        if (!interaction.customId.startsWith('recipesearch')) return;
         const post = interaction.channel;
         if (post?.isThread()) {
-            post.setLocked(true).catch(myLog);
-            post.setArchived(true).catch(myLog);
+            const userId = interaction.customId.split('::')[1];
             interaction.deferUpdate();
+            if (interaction.user.id === userId) {
+                post?.delete().catch(myLog)
+            } else {
+                post.send({content: `Sorry <@${interaction.user.id}>, only the request owner or a moderator can close this request.`});
+            }
+
         }
     }
     if (interaction.isStringSelectMenu()) {
-        interaction.deferReply();
+        interaction.deferReply({ephemeral: true});
         console.log(interactions)
         if (interaction.customId !== 'recipesearch') return;
         const original = interactions.find(({id}) => id === interaction.message.interaction?.id);
@@ -159,6 +161,7 @@ client.on(Events.InteractionCreate, async interaction => {
                                                      profession_recipes.tier_id
                                 WHERE  character_known_recipes.recipe_id = ?`, [results.recipe_id], (err: Error, crafters: any) => {
                     if (err) myLog(err);
+
                     console.log(crafters);
                     // @ts-ignore
                     crafters = crafters.sort((a, b) => {
@@ -190,17 +193,21 @@ client.on(Events.InteractionCreate, async interaction => {
                     }
                     embed.setTitle(`${results.recipe_name} Crafters`)
                         .setDescription(`${results.tier_name}`);
-                    let fields: Array<APIEmbedField> = [];
                     for (let i = 0; i <= field; i++) {
-                        fields.push({name: 'Character / Skill', value: field1[i], inline: true})
-                        fields.push({name: 'Guild Note', value: field2[i], inline: true})
-                        fields.push({name: '\u200b', value: '\u200b'})
+                        const testFields: Array<APIEmbedField> = [];
+                        testFields.push({name: 'Character / Skill', value: field1[i], inline: true})
+                        testFields.push({name: 'Guild Note', value: field2[i], inline: true})
+                        if (i < field) testFields.push({name: '\u200b', value: '\u200b'})
+                        const testEmbed = new EmbedBuilder(embed.data);
+                        testEmbed.addFields(testFields)
+                        if (embedLength(testEmbed.data) >= 6000) {
+                            break;
+                        } else {
+                            embed.addFields(testFields)
+                        }
                     }
-                    embed.addFields(fields);
-
-
                     const close = new ButtonBuilder()
-                        .setCustomId('recipesearch')
+                        .setCustomId('recipesearch::' + interaction.user.id)
                         .setLabel('Close Post')
                         .setStyle(ButtonStyle.Danger);
                     const actionrow: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>().addComponents(close)
@@ -489,18 +496,7 @@ async function validateToken() {
     });
 }
 
-let professionsUpdateActive = false;
-let count = 0;
-
 async function updateCharacterProfessions() {
-    count++
-    console.log("update count", count)
-
-    if (professionsUpdateActive) {
-        console.log("Current professions update still in progress...")
-        return false;
-    }
-    professionsUpdateActive = true;
 
     db.all(`SELECT character_name as name, realm, last_login, cached_professions 
             FROM guild_members
@@ -565,7 +561,6 @@ async function updateCharacterProfessions() {
             }));
 
         }
-        professionsUpdateActive = false;
         return true;
     })
 }
