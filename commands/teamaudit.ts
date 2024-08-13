@@ -29,79 +29,84 @@ module.exports = {
             .addChoices(choices)), async execute(interaction: CommandInteraction) {
         await interaction.deferReply({ephemeral: true});
 
-        if (!hasRaidLeaderRole(interaction.member as GuildMember)) {
-            await interaction.editReply({content: "You do not have permission to use this command"});
-            return;
-        }
-        const teamID = teams.find(item => item.gowID === interaction.options.get('team')!.value!.toString());
-        const embed = new EmbedBuilder({})
-            .setTitle(teamID!.team)
+        hasRaidLeaderRole(interaction.member as GuildMember).then(async (allowed) => {
+            if (!allowed) {
+                await interaction.editReply({content: "You do not have permission to use this command"}).catch(console.log);
+                return;
+            } else {
 
-        auditTeam(teamID!).then(async (result) => {
-            // @ts-ignore
-            const lastRefresh = Math.floor(Date.parse(result.lastAuditRefreshDate + 'Z') / 1000);
-            let field1: string[] = [''];
-            let field2: string[] = [''];
-            let field3: string[] = [''];
-            let field: number = 0;
-            // @ts-ignore
-            if (result.roster) {
 
-                // @ts-ignore
-                result.roster.forEach(member => {
-                    if (member.audit) {
-                        const auditWarnings = member.audit.gearAuditValidation ? Math.abs(member.audit.gearAuditValidation) : 0;
-                        const warn = auditWarnings ? ` :warning: (${auditWarnings})` : '';
+                const teamID = teams.find(item => item.gowID === interaction.options.get('team')!.value!.toString());
+                const embed = new EmbedBuilder({})
+                    .setTitle(teamID!.team)
+
+                auditTeam(teamID!).then(async (result) => {
+                    // @ts-ignore
+                    const lastRefresh = Math.floor(Date.parse(result.lastAuditRefreshDate + 'Z') / 1000);
+                    let field1: string[] = [''];
+                    let field2: string[] = [''];
+                    let field3: string[] = [''];
+                    let field: number = 0;
+                    // @ts-ignore
+                    if (result.roster) {
+
                         // @ts-ignore
-                        const name = `[${member.name}${warn}](${result.baseUrl}${member.guildsOfWowUrl})\n`;
-                        if (field1[field].length + name.length > 1023) {
-                            field++;
-                            field1[field] = '';
-                            field2[field] = '';
-                            field3[field] = '';
+                        result.roster.forEach(member => {
+                            if (member.audit) {
+                                const auditWarnings = member.audit.gearAuditValidation ? Math.abs(member.audit.gearAuditValidation) : 0;
+                                const warn = auditWarnings ? ` :warning: (${auditWarnings})` : '';
+                                // @ts-ignore
+                                const name = `[${member.name}${warn}](${result.baseUrl}${member.guildsOfWowUrl})\n`;
+                                if (field1[field].length + name.length > 1023) {
+                                    field++;
+                                    field1[field] = '';
+                                    field2[field] = '';
+                                    field3[field] = '';
+                                }
+                                const gvMplusSlots = member.audit.mythicPlusGreatVaultRewards ? member.audit.mythicPlusGreatVaultRewards : 0;
+                                const gvMplusSlot1 = member.audit.mythicPlusGreatVaultKeystone1 ? member.audit.mythicPlusGreatVaultKeystone1 : 0;
+                                const gvMplusSlot2 = member.audit.mythicPlusGreatVaultKeystone2 ? member.audit.mythicPlusGreatVaultKeystone2 : 0;
+                                const gvMplusSlot3 = member.audit.mythicPlusGreatVaultKeystone3 ? member.audit.mythicPlusGreatVaultKeystone3 : 0;
+                                const gvRaidSlots = member.audit.raidGreatVaultRewards ? member.audit.raidGreatVaultRewards : 0;
+                                const gvRaidSlot1 = member.audit.raidGreatVaultDifficulty1 ? member.audit.raidGreatVaultDifficulty1 : 0;
+                                const gvRaidSlot2 = member.audit.raidGreatVaultDifficulty2 ? member.audit.raidGreatVaultDifficulty2 : 0;
+                                const gvRaidSlot3 = member.audit.raidGreatVaultDifficulty3 ? member.audit.raidGreatVaultDifficulty3 : 0;
+                                const tierPieces = member.audit.tierSetPieceCount ? member.audit.tierSetPieceCount : 0;
+                                const weeklyScore = member.audit.weeklyScore ? member.audit.weeklyScore : 0;
+                                const totalScore = member.audit.score ? member.audit.score : 0;
+                                field1[field] += name;
+                                field2[field] += `**${gvMplusSlots}** (_${gvMplusSlot1}_/_${gvMplusSlot2}_/_${gvMplusSlot3}_) / **${gvRaidSlots}** (_${gvRaidSlot1}_/_${gvRaidSlot2}_/_${gvRaidSlot3}_)\n`;
+                                field3[field] += `**${tierPieces}**/5 - **${weeklyScore}** (_${totalScore}_)\n`;
+                                //         console.log('field1', field1[field])
+                            } else {
+                                // @ts-ignore
+                                field1[field] += `[${member.name} :warning:](${result.baseUrl}${member.guildsOfWowUrl})\n`;
+                                field2[field] += '**No Audit Information!**\n';
+                                field3[field] += `\n`;
+                            }
+                        });
+
+                        let fields: Array<APIEmbedField> = [];
+                        for (let i = 0; i <= field; i++) {
+                            fields.push({name: 'Character', value: field1[i], inline: true})
+                            fields.push({name: 'GV (M+ / Raid)', value: field2[i], inline: true})
+                            fields.push({name: 'Tier Pieces & Score', value: field3[i], inline: true})
                         }
-                        const gvMplusSlots = member.audit.mythicPlusGreatVaultRewards ? member.audit.mythicPlusGreatVaultRewards : 0;
-                        const gvMplusSlot1 = member.audit.mythicPlusGreatVaultKeystone1 ? member.audit.mythicPlusGreatVaultKeystone1 : 0;
-                        const gvMplusSlot2 = member.audit.mythicPlusGreatVaultKeystone2 ? member.audit.mythicPlusGreatVaultKeystone2 : 0;
-                        const gvMplusSlot3 = member.audit.mythicPlusGreatVaultKeystone3 ? member.audit.mythicPlusGreatVaultKeystone3 : 0;
-                        const gvRaidSlots = member.audit.raidGreatVaultRewards ? member.audit.raidGreatVaultRewards : 0;
-                        const gvRaidSlot1 = member.audit.raidGreatVaultDifficulty1 ? member.audit.raidGreatVaultDifficulty1 : 0;
-                        const gvRaidSlot2 = member.audit.raidGreatVaultDifficulty2 ? member.audit.raidGreatVaultDifficulty2 : 0;
-                        const gvRaidSlot3 = member.audit.raidGreatVaultDifficulty3 ? member.audit.raidGreatVaultDifficulty3 : 0;
-                        const tierPieces = member.audit.tierSetPieceCount ? member.audit.tierSetPieceCount : 0;
-                        const weeklyScore = member.audit.weeklyScore ? member.audit.weeklyScore : 0;
-                        const totalScore = member.audit.score ? member.audit.score : 0;
-                        field1[field] += name;
-                        field2[field] += `**${gvMplusSlots}** (_${gvMplusSlot1}_/_${gvMplusSlot2}_/_${gvMplusSlot3}_) / **${gvRaidSlots}** (_${gvRaidSlot1}_/_${gvRaidSlot2}_/_${gvRaidSlot3}_)\n`;
-                        field3[field] += `**${tierPieces}**/5 - **${weeklyScore}** (_${totalScore}_)\n`;
-                        //         console.log('field1', field1[field])
-                    } else {
-                        // @ts-ignore
-                        field1[field] += `[${member.name} :warning:](${result.baseUrl}${member.guildsOfWowUrl})\n`;
-                        field2[field] += '**No Audit Information!**\n';
-                        field3[field] += `\n`;
+                        embed.addFields(fields);
                     }
+
+
+                    //  console.log('field= ', field, 'fields = ', field1, field2, field3)
+                    embed.setDescription(`**Raid Team Audit**\n-# _Updated <t:${lastRefresh}:R>_`);
+                    // @ts-ignore
+                    embed.setURL(`${result.baseUrl}${result.guildPermaUrl}/team/${teamID.gowID}`);
+                    await interaction.deleteReply();
+                    await interaction.followUp({ephemeral: false, embeds: [embed]});
+                }).catch(async err => {
+                    myLog(err);
+                    await interaction.editReply({content: err})
                 });
-
-                let fields: Array<APIEmbedField> = [];
-                for (let i = 0; i <= field; i++) {
-                    fields.push({name: 'Character', value: field1[i], inline: true})
-                    fields.push({name: 'GV (M+ / Raid)', value: field2[i], inline: true})
-                    fields.push({name: 'Tier Pieces & Score', value: field3[i], inline: true})
-                }
-                embed.addFields(fields);
             }
-
-
-            //  console.log('field= ', field, 'fields = ', field1, field2, field3)
-            embed.setDescription(`**Raid Team Audit**\n-# _Updated <t:${lastRefresh}:R>_`);
-            // @ts-ignore
-            embed.setURL(`${result.baseUrl}${result.guildPermaUrl}/team/${teamID.gowID}`);
-            await interaction.deleteReply();
-            await interaction.followUp({ephemeral: false, embeds: [embed]});
-        }).catch(async err => {
-            myLog(err);
-            await interaction.editReply({content: err})
         });
     }
 };
