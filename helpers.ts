@@ -1,6 +1,7 @@
 import * as http from "https";
 import {GuildMember} from "discord.js";
 import {config} from "./config";
+import {myLog} from "./index";
 
 export function webreq(options: http.RequestOptions) {
     return new Promise((resolve, reject) => {
@@ -27,12 +28,14 @@ export function webreq(options: http.RequestOptions) {
     })
 }
 
-export function hasRaidLeaderRole(user: GuildMember): boolean {
+export async function hasRaidLeaderRole(user: GuildMember) {
     let allowed = false;
-    user.roles.cache.forEach((role) => {
-        if (config.raidteamleaderroles.includes(role.id)) {
-            allowed = true;
-        }
-    })
+    await user.fetch().then(() => {
+        user.roles.cache.forEach((role) => {
+            if (config.raidteamleaderroles.includes(role.id)) {
+                allowed = true;
+            }
+        })
+    }).catch(myLog);
     return allowed;
 }
