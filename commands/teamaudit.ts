@@ -1,7 +1,7 @@
 import {SlashCommandBuilder} from "@discordjs/builders";
-import {APIApplicationCommandOptionChoice, APIEmbedField, CommandInteraction, EmbedBuilder, Role} from "discord.js";
+import {APIApplicationCommandOptionChoice, APIEmbedField, CommandInteraction, EmbedBuilder} from "discord.js";
 import {config} from "../config";
-import {myLog} from "../index";
+import {myLog, thisServer} from "../index";
 import * as https from "https";
 
 const choices: APIApplicationCommandOptionChoice<string> | { name: string; value: string; }[] = [];
@@ -19,15 +19,25 @@ module.exports = {
             .setName("team")
             .setDescription("Select a team")
             .setRequired(true)
-            .addChoices(choices)
-        ),
-    async execute(interaction: CommandInteraction) {
-        // console.log(interaction);
+            .addChoices(choices)), async execute(interaction: CommandInteraction) {
+        await interaction.deferReply({ephemeral: true});
+        let allowed = false;
+        thisServer.members.cache.get(interaction.user.id)?.roles.cache.forEach((role) => {
+            console.log(role.id, role.name)
+            if (config.raidteamleaderroles.includes(role.id)) {
+                console.log("match")
+                allowed = true;
+            }
+        })
+        if (!allowed) {
+            await interaction.editReply({content: "You do not have permission to use this command"});
+            return;
+        }
         const teamID = teams.find(item => item.gowID === interaction.options.get('team')!.value!.toString());
         const embed = new EmbedBuilder({})
             .setTitle(teamID!.team)
 
-        auditTeam(teamID!).then((result) => {
+        auditTeam(teamID!).then(async (result) => {
             // @ts-ignore
             const lastRefresh = Math.floor(Date.parse(result.lastAuditRefreshDate + 'Z') / 1000);
             let field1: string[] = [''];
@@ -65,8 +75,7 @@ module.exports = {
                         field2[field] += `**${gvMplusSlots}** (_${gvMplusSlot1}_/_${gvMplusSlot2}_/_${gvMplusSlot3}_) / **${gvRaidSlots}** (_${gvRaidSlot1}_/_${gvRaidSlot2}_/_${gvRaidSlot3}_)\n`;
                         field3[field] += `**${tierPieces}**/5 - **${weeklyScore}** (_${totalScore}_)\n`;
                         //         console.log('field1', field1[field])
-                    }
-                    else {
+                    } else {
                         // @ts-ignore
                         field1[field] += `[${member.name} :warning:](${result.baseUrl}${member.guildsOfWowUrl})\n`;
                         field2[field] += '**No Audit Information!**\n';
@@ -88,10 +97,11 @@ module.exports = {
             embed.setDescription(`**Raid Team Audit**\n-# _Updated <t:${lastRefresh}:R>_`);
             // @ts-ignore
             embed.setURL(`${result.baseUrl}${result.guildPermaUrl}/team/${teamID.gowID}`);
-            interaction.reply({ephemeral: false, embeds: [embed]});
-        }).catch(err => {
+            await interaction.deleteReply();
+            await interaction.followUp({ephemeral: false, embeds: [embed]});
+        }).catch(async err => {
             myLog(err);
-            interaction.reply({ephemeral: true, content: err})
+            await interaction.editReply({content: err})
         });
     }
 };
