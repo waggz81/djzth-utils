@@ -3,7 +3,7 @@ import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
 import {CommandInteraction, GuildMember, PermissionsBitField, TextChannel} from "discord.js";
 import {myLog, thisServer} from "../index";
-import {hasRaidLeaderRole} from "../helpers";
+import {createPendingEmbed, hasRaidLeaderRole} from "../helpers";
 
 const access_control_channel = thisServer.channels.cache.get(config.access_control) as TextChannel;
 module.exports = {
@@ -57,21 +57,3 @@ module.exports = {
     }
 };
 
-export function createPendingEmbed(interaction: CommandInteraction, remove: boolean = false) {
-
-const textstr = remove ? "remove from" : "granted";
-
-    access_control_channel.send({
-            "embeds": [{
-                "title": "Pending Access Request",
-                "description": `${(interaction.member as GuildMember).displayName} requests \`${interaction.options.get('target')!.user!.username}#${interaction.options.get('target')!.user!.discriminator}\` \
-                                be ${textstr} the \`@${interaction.options.get('role')!.role!.name}\` role`,
-            }]
-        })
-            .then((message) => {
-                message.react('✅').catch(myLog);
-                message.react('🚫').catch(myLog);
-                addRolePending(message.id, interaction);
-            }).catch(console.log)
-
-}

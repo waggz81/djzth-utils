@@ -2,8 +2,7 @@ import {config} from "../config";
 import {SlashCommandBuilder} from "@discordjs/builders";
 import {CommandInteraction, GuildMember, PermissionsBitField, TextChannel} from "discord.js";
 import {myLog, thisServer} from "../index";
-import {hasRaidLeaderRole} from "../helpers";
-import {createPendingEmbed} from "./addrole";
+import {createPendingEmbed, hasRaidLeaderRole} from "../helpers";
 
 const access_control_channel = thisServer.channels.cache.get(config.access_control) as TextChannel;
 module.exports = {
@@ -14,7 +13,7 @@ module.exports = {
         .addRoleOption((option) => option.setName("role").setDescription("Select a role").setRequired(true)),
     async execute(interaction: CommandInteraction) {
         await interaction.deferReply({ephemeral: true})
-        await hasRaidLeaderRole(interaction.member as GuildMember).then(async (allowed) => {
+        hasRaidLeaderRole(interaction.member as GuildMember).then(async (allowed) => {
             if (!allowed) {
                 await interaction.editReply({content: "You do not have permission to use this command"}).catch(console.log);
                 return;
@@ -43,11 +42,7 @@ module.exports = {
                             });
                         })
                 } else {
-                    await interaction.reply({
-                        content: "This role is not auto approved and is pending review. You will be notified when it has been approved or denied.",
-                        ephemeral: true
-                    });
-
+                    await interaction.editReply({ content: "This role is not auto approved and is pending review. You will be notified when it has been approved or denied." });
                     createPendingEmbed(interaction, true);
                 }
             }
