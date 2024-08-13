@@ -3,6 +3,7 @@ import {SlashCommandBuilder} from "@discordjs/builders";
 import {Colors, CommandInteraction, EmbedBuilder} from "discord.js";
 import * as http from "https";
 import {myLog} from "../index";
+import {webreq} from "../helpers";
 
 let token: string = '';
 const teamName:string = config.streamteamname;
@@ -205,26 +206,6 @@ async function getLiveStreamers(memberIDs: {
 
 }
 
-function webreq(options: http.RequestOptions) {
-    return new Promise((resolve, reject) => {
-        const req = http.request(options, (res) => {
-            const body: string[] = [];
-            res.setEncoding('utf8');
-            res.on('data', (chunk) => {
-                body.push(chunk);
-            });
-            res.on('end', () => {
-                resolve(body.join(''));
-            });
 
-        });
-        req.on('error', (e) => {
-            console.error(`problem with request: ${e.message}`);
-            reject(e);
-        });
-
-        req.end();
-    })
-}
 
 validateToken();
