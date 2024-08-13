@@ -14,8 +14,7 @@ import {
     StringSelectMenuOptionBuilder
 } from "discord.js";
 import * as https from "https";
-import {client, myLog, thisServer} from "../index";
-import {config} from "../config";
+import {client, myLog, thisServer} from "../index";import {config, NODE_ENV} from "../config";
 import {db} from "../db";
 import {webreq} from "../helpers";
 
@@ -577,8 +576,8 @@ async function updates() {
         updates().catch(myLog);
     }, 1000 * 60 * 30); // 30 minutes
 }
-
-updates().catch(myLog);
+if (NODE_ENV !== 'development')
+    updates().catch(myLog);
 
 
 
