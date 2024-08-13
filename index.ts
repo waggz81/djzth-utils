@@ -90,6 +90,9 @@ client.once(Events.ClientReady, async c => {
     updateStatus();
 });
 
+client.on(Events.Error, async err => {
+    console.error(err)
+})
 client.login(config.token)
     .then(() => {
         // additional requires
