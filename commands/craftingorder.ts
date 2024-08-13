@@ -114,6 +114,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (post?.isThread()) {
             post.setLocked(true).catch(myLog);
             post.setArchived(true).catch(myLog);
+            interaction.deferUpdate();
         }
     }
     if (interaction.isStringSelectMenu()) {
