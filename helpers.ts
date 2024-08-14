@@ -101,7 +101,7 @@ export function sendLFGPings (post: ThreadChannel, embedOnly: boolean = false, r
         let roleMentions = '';
         if (roles) {
             roles.forEach(role => {
-                roleMentions += `<@&${role}>`;
+                roleMentions += `<@&${role}> `;
             })
         }
         lfgchannel.send({content: `A group is forming and is in search of players! [${post.name}](${post.url}) ${roleMentions}`}).catch(myLog);
