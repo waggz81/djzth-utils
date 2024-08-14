@@ -1,6 +1,13 @@
 import {config} from "../config";
-import {EmbedBuilder, Events, ThreadAutoArchiveDuration, ForumChannel, Snowflake} from "discord.js";
+import {
+    EmbedBuilder,
+    Events,
+    ThreadAutoArchiveDuration,
+    ForumChannel,
+    Snowflake
+} from "discord.js";
 import {client, myLog, thisServer} from "../index";
+import {sendLFGPings} from "../helpers";
 
 client.on(Events.ThreadCreate, async thread => {
     if (thread.ownerId === '508391840525975553' && thread.name.startsWith('zth-')) {
@@ -99,4 +106,15 @@ client.on(Events.ThreadCreate, async thread => {
         }
     }
 
+});
+
+client.on(Events.ThreadCreate, async thread => {
+
+    if (config.lfgpostschannel.includes(thread.parentId)) {
+        console.log(thread)
+        const lfgchannel = thisServer.channels.cache.get(config.lfgchannel);
+        if (lfgchannel && lfgchannel.isTextBased()) {
+            sendLFGPings(thread, true);
+        }
+    }
 });
