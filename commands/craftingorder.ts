@@ -98,7 +98,6 @@ module.exports = {
 
 let interactions: { interaction: Interaction, id: string }[] = [];
 client.on(Events.InteractionCreate, async interaction => {
-    console.log(interaction)
     if (interaction.isChatInputCommand()) {
         if (interaction.commandName !== 'recipesearch') return;
         interactions.push({interaction: interaction, id: interaction.id});

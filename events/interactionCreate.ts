@@ -1,15 +1,20 @@
 import {EmbedPagination} from "../embedPagination";
 import {client, myLog} from "../index";
-import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Events} from "discord.js";
 import {
-    AudioPlayerStatus,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    EmbedBuilder,
+    Events,
+    StringSelectMenuInteraction
+} from "discord.js";
+import {
     createAudioPlayer,
-    createAudioResource, generateDependencyReport,
+    createAudioResource,
     getVoiceConnection,
-    NoSubscriberBehavior
 } from '@discordjs/voice';
-import {createReadStream} from "node:fs";
 import * as fs from "node:fs";
+import {sendLFGPings} from "../helpers";
 
 client.on(Events.InteractionCreate, interaction => {
     if (!interaction.isButton()) return;
@@ -91,4 +96,14 @@ client.on(Events.InteractionCreate, async interaction => {
                 '```' + error + '```', ephemeral: true
         }).catch(myLog);
     }
+});
+
+client.on(Events.InteractionCreate, async interaction => {
+    if (!interaction.isStringSelectMenu()) return;
+    if (interaction.customId !== "lfgping") return;
+    if (interaction.message.channel && !interaction.message.channel.isThread()) return;
+
+    interaction.deleteReply().catch(myLog);
+    interaction.message.delete().catch(myLog);
+    sendLFGPings(interaction.message.channel, false, interaction.values);
 });

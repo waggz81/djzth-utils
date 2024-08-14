@@ -1,5 +1,15 @@
 import * as http from "https";
-import {CommandInteraction, GuildMember, TextChannel} from "discord.js";
+import {
+    ActionRowBuilder,
+    ChannelType,
+    CommandInteraction,
+    EmbedBuilder,
+    GuildMember,
+    StringSelectMenuBuilder,
+    StringSelectMenuOptionBuilder,
+    TextChannel,
+    ThreadChannel
+} from "discord.js";
 import {config} from "./config";
 import {myLog, thisServer} from "./index";
 import {addRolePending} from "./db";
@@ -59,4 +69,43 @@ export function createPendingEmbed(interaction: CommandInteraction, remove: bool
             addRolePending(message.id, interaction);
         }).catch(console.log)
 
+}
+
+export function sendLFGPings (post: ThreadChannel, embedOnly: boolean = false, roles: string[] | null = null) {
+    const embed = new EmbedBuilder()
+        .setTitle("Ping roles for this group")
+        .setDescription("Choose the groups below you'd like to ping for this group. ");
+    const select = new ActionRowBuilder<StringSelectMenuBuilder>();
+    const selectMenu = new StringSelectMenuBuilder().setCustomId('lfgping')
+        .setMinValues(1)
+        .setMaxValues(3);
+    let selectMenuOptions: Array<StringSelectMenuOptionBuilder> = [];
+    let count = 0;
+
+    console.log(config.lfgpingroles)
+    for (const role of config.lfgpingroles) {
+        if (count > 24) break;
+        const thisRole = thisServer.roles.cache.get(role);
+        console.log(thisRole)
+        if (thisRole) {
+            selectMenuOptions.push(new StringSelectMenuOptionBuilder()
+                .setLabel(thisRole.name)
+                .setValue(thisRole.id));
+            count++;
+        }
+    }
+    selectMenu.addOptions(selectMenuOptions)
+    select.addComponents(selectMenu)
+    post.send({embeds: [embed], components: [select]}).catch(myLog);
+    if (embedOnly) return;
+    const lfgchannel = thisServer.channels.cache.get(config.lfgchannel);
+    if (lfgchannel && lfgchannel.type === ChannelType.GuildText) {
+        let roleMentions = '';
+        if (roles) {
+            roles.forEach(role => {
+                roleMentions += `<@&${role}>`;
+            })
+        }
+        lfgchannel.send({content: `A group is forming and is in search of players! [${post.name}](${post.url}) ${roleMentions}`}).catch(myLog);
+    }
 }
