@@ -82,11 +82,9 @@ export function sendLFGPings (post: ThreadChannel, embedOnly: boolean = false, r
     let selectMenuOptions: Array<StringSelectMenuOptionBuilder> = [];
     let count = 0;
 
-    console.log(config.lfgpingroles)
     for (const role of config.lfgpingroles) {
         if (count > 24) break;
         const thisRole = thisServer.roles.cache.get(role);
-        console.log(thisRole)
         if (thisRole) {
             selectMenuOptions.push(new StringSelectMenuOptionBuilder()
                 .setLabel(thisRole.name)

@@ -109,9 +109,8 @@ client.on(Events.ThreadCreate, async thread => {
 });
 
 client.on(Events.ThreadCreate, async thread => {
-
+console.log(thread)
     if (config.lfgpostschannel.includes(thread.parentId)) {
-        console.log(thread)
         const lfgchannel = thisServer.channels.cache.get(config.lfgchannel);
         if (lfgchannel && lfgchannel.isTextBased()) {
             sendLFGPings(thread, true);
