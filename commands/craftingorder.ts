@@ -137,6 +137,8 @@ client.on(Events.InteractionCreate, async interaction => {
             if (err) {
                 console.log(err)
             } else {
+                let days = 30;
+                const filterlastlogin = Date.now() - (1000 * 86400 * days);
                 await db.all(` 
                                  SELECT guild_members.character_name,
                                        guild_members.realm,
@@ -145,7 +147,8 @@ client.on(Events.InteractionCreate, async interaction => {
                                        profession_skills.max_skill_level,
                                        profession_recipes.recipe_name,
                                        profession_skills.profession_tier_name,
-                                       guild_members.player_notes
+                                       guild_members.player_notes,
+                                       guild_members.last_login
                                 FROM   guild_members
                                        LEFT JOIN character_known_recipes
                                               ON guild_members.blizz_character_id =
@@ -158,7 +161,8 @@ client.on(Events.InteractionCreate, async interaction => {
                                                  profession_skills.character_id
                                                  AND profession_skills.profession_tier_id =
                                                      profession_recipes.tier_id
-                                WHERE  character_known_recipes.recipe_id = ?`, [results.recipe_id], (err: Error, crafters: any) => {
+                                WHERE  character_known_recipes.recipe_id = ?
+                                AND guild_members.last_login > ?`, [results.recipe_id, filterlastlogin], (err: Error, crafters: any) => {
                     if (err) myLog(err);
 
                     console.log(crafters);
@@ -190,7 +194,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         field1[field] += addName;
                         field2[field] += addGuild;
                     }
-                    embed.setTitle(`${results.recipe_name} Crafters`)
+                    embed.setTitle(`${results.recipe_name} Crafters (online last ${days} days)`)
                         .setDescription(`${results.tier_name}`);
                     for (let i = 0; i <= field; i++) {
                         const testFields: Array<APIEmbedField> = [];
