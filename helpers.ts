@@ -6,6 +6,7 @@ import {
     EmbedBuilder,
     GuildMember,
     StringSelectMenuBuilder,
+    StringSelectMenuComponent,
     StringSelectMenuOptionBuilder,
     TextChannel,
     ThreadChannel
@@ -71,10 +72,10 @@ export function createPendingEmbed(interaction: CommandInteraction, remove: bool
 
 }
 
-export function sendLFGPings (post: ThreadChannel, embedOnly: boolean = false, roles: string[] | null = null) {
+export function sendLFGPings(post: ThreadChannel, embedOnly: boolean = false, roles: string[] | null = null, sender: GuildMember | null) {
     const embed = new EmbedBuilder()
         .setTitle("Ping roles for this group")
-        .setDescription("Choose the groups below you'd like to ping for this group. ");
+        .setDescription("Choose the groups below you'd like to ping for this group, then click away from the selection menu to send it!");
     const select = new ActionRowBuilder<StringSelectMenuBuilder>();
     const selectMenu = new StringSelectMenuBuilder().setCustomId('lfgping')
         .setMinValues(1)
@@ -93,8 +94,22 @@ export function sendLFGPings (post: ThreadChannel, embedOnly: boolean = false, r
         }
     }
     selectMenu.addOptions(selectMenuOptions)
+    if (!embedOnly) {
+        selectMenu.setDisabled(true);
+    }
     select.addComponents(selectMenu)
-    post.send({embeds: [embed], components: [select]}).catch(myLog);
+    post.send({embeds: [embed], components: [select]}).then((post) => {
+        if (!embedOnly && post.components) {
+            console.log(post.components[0].components[0]);
+            setTimeout(() => {
+                const newbutton = StringSelectMenuBuilder.from(post.components[0].components[0] as StringSelectMenuComponent);
+                console.log(newbutton.setDisabled(false));
+                const newselect = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(newbutton);
+
+                post.edit({components: [newselect]}).catch(myLog);
+            }, 1000 * 15);
+        }
+    }).catch(myLog);
     if (embedOnly) return;
     const lfgchannel = thisServer.channels.cache.get(config.lfgchannel);
     if (lfgchannel && lfgchannel.type === ChannelType.GuildText) {
@@ -104,6 +119,6 @@ export function sendLFGPings (post: ThreadChannel, embedOnly: boolean = false, r
                 roleMentions += `<@&${role}> `;
             })
         }
-        lfgchannel.send({content: `A group is forming and is in search of players! [${post.name}](${post.url}) ${roleMentions}`}).catch(myLog);
+        lfgchannel.send({content: `A group is forming and is in search of players! [${post.name}](${post.url}) ${roleMentions}\n-# sent by <@${sender?.id}>`}).catch(myLog);
     }
 }

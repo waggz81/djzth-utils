@@ -5,8 +5,7 @@ import {
     ButtonBuilder,
     ButtonStyle,
     EmbedBuilder,
-    Events,
-    StringSelectMenuInteraction
+    Events, GuildMember,
 } from "discord.js";
 import {
     createAudioPlayer,
@@ -105,5 +104,5 @@ client.on(Events.InteractionCreate, async interaction => {
 
     interaction.deleteReply().catch(myLog);
     interaction.message.delete().catch(myLog);
-    sendLFGPings(interaction.message.channel, false, interaction.values);
+    sendLFGPings(interaction.message.channel, false, interaction.values, interaction.member as GuildMember);
 });

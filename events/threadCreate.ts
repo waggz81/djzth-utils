@@ -113,7 +113,7 @@ console.log(thread)
     if (config.lfgpostschannel.includes(thread.parentId)) {
         const lfgchannel = thisServer.channels.cache.get(config.lfgchannel);
         if (lfgchannel && lfgchannel.isTextBased()) {
-            sendLFGPings(thread, true);
+            sendLFGPings(thread, true, null, null);
         }
     }
 });
