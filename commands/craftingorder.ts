@@ -119,17 +119,14 @@ client.on(Events.InteractionCreate, async interaction => {
     }
     if (interaction.isStringSelectMenu()) {
         interaction.deferReply({ephemeral: true});
-        console.log(interactions)
         if (interaction.customId !== 'recipesearch') return;
         const original = interactions.find(({id}) => id === interaction.message.interaction?.id);
-        console.log(original?.interaction);
-        console.log(interaction);
+
         if (original?.interaction.isRepliable()) original.interaction.deleteReply().catch(myLog).then(() => {
             interactions = interactions.filter(function (id) {
                 return id.id != interaction.message.interaction?.id;
             });
         })
-        console.log(interactions)
         const embed = new EmbedBuilder();
         await db.get(`select * from profession_recipes
                     where recipe_id = ?`, [interaction.values[0],], async function (err: Error, results: any) {
@@ -164,9 +161,7 @@ client.on(Events.InteractionCreate, async interaction => {
                                 AND guild_members.last_login > ?`, [results.recipe_id, filterlastlogin], (err: Error, crafters: any) => {
                     if (err) myLog(err);
 
-                    console.log(crafters);
-                    // @ts-ignore
-                    crafters = crafters.sort((a, b) => {
+                    crafters = crafters.sort((a: { skill_level: any; }, b: { skill_level: any; }) => {
                         const skillA = a.skill_level;
                         const skillB = b.skill_level;
                         if (skillA > skillB) {
@@ -579,8 +574,5 @@ async function updates() {
         updates().catch(myLog);
     }, 1000 * 60 * 30); // 30 minutes
 }
-if (NODE_ENV !== 'development')
+ if (NODE_ENV !== 'development')
     updates().catch(myLog);
-
-
-

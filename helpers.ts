@@ -100,12 +100,9 @@ export function sendLFGPings(post: ThreadChannel, embedOnly: boolean = false, ro
     select.addComponents(selectMenu)
     post.send({embeds: [embed], components: [select]}).then((post) => {
         if (!embedOnly && post.components) {
-            console.log(post.components[0].components[0]);
             setTimeout(() => {
                 const newbutton = StringSelectMenuBuilder.from(post.components[0].components[0] as StringSelectMenuComponent);
-                console.log(newbutton.setDisabled(false));
                 const newselect = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(newbutton);
-
                 post.edit({components: [newselect]}).catch(myLog);
             }, 1000 * 15);
         }
