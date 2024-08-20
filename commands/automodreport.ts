@@ -23,7 +23,6 @@ module.exports = {
     async execute(interaction: CommandInteraction) {
         if (thisServer.members.cache.get(interaction.user.id)?.roles.cache.has(config.moderatorrole)) {
             const list: any[] = [];
-            myLog(interaction);
             const subcommand = interaction.options.data[0].name;
             const column = (subcommand === "users") ? "executorId" : "channelId";
             const sql = `select *, count(${column}) as count
@@ -31,7 +30,6 @@ module.exports = {
                                                 group by ${column}
                                                 order by count(${column}) desc
                                                 limit 50`;
-            myLog(sql);
             db.all(sql, [], (err: Error, rows: any) => {
                 if (err) {
                     myLog(err);

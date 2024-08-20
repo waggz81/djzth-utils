@@ -14,6 +14,10 @@ import {
 import {config} from "./config";
 import {myLog, thisServer} from "./index";
 import {addRolePending} from "./db";
+import * as https from "https";
+
+let blizztoken: string;
+let tokenexpiration: number;
 
 export function webreq(options: http.RequestOptions) {
     return new Promise((resolve, reject) => {
@@ -119,3 +123,82 @@ export function sendLFGPings(post: ThreadChannel, embedOnly: boolean = false, ro
         lfgchannel.send({content: `A group is forming and is in search of players! [${post.name}](${post.url}) ${roleMentions}\n-# sent by <@${sender?.id}>`}).catch(myLog);
     }
 }
+
+export async function getBnetRoster (realm:string, guildslug:string) {
+    await validateToken();
+    return new Promise((resolve) => {
+        const options = {
+            "method": "GET",
+            "hostname": "us.api.blizzard.com",
+            "port": null,
+            "path": `/data/wow/guild/${realm}/${guildslug}?namespace=profile-us&locale=en_US&=`,
+            "headers": {
+                "Authorization": `Bearer ${blizztoken}`
+            }
+        };
+
+        webreq(options).then(async res => {
+            //console.log(res);
+            resolve(JSON.parse(<string>res));
+        }).catch(() => {
+            resolve(null)
+        })
+    });
+}
+
+async function getToken(): Promise<boolean> {
+
+    const options = {
+        hostname: 'oauth.battle.net', port: 443, path: '/token?=', method: 'POST', headers: {
+            "Content-Type": "multipart/form-data; boundary=---011000010111000001101001",
+            'Authorization': 'Basic ' + Buffer.from(config.battlenetclientid + ':' + config.battlenetsecret).toString('base64'),
+        },
+    };
+
+    return new Promise((resolve, reject) => {
+
+        const req = https.request(options, (res) => {
+            let data = "";
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            res.on('end', () => {
+                const body = JSON.parse(data);
+                if (body.access_token) {
+                    blizztoken = body.access_token;
+                    tokenexpiration = Date.now() + (body.expires_in * 1000);
+                    resolve(body)
+                } else {
+                    reject(data)
+                }
+            });
+
+        });
+
+        req.on('error', (e) => {
+            console.error(`problem with request: ${e.message}`);
+        });
+
+// Write data to request body
+        req.write("-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"grant_type\"\r\n\r\nclient_credentials\r\n-----011000010111000001101001--\r\n");
+        req.end();
+    });
+}
+
+export async function validateToken() {
+    return new Promise((resolve) => {
+        if (blizztoken && tokenexpiration > Date.now()) {
+            resolve(true);
+            console.log("token valid")
+        } else {
+            console.log("missing or expired token, run gettoken")
+            getToken().then(async () => {
+                resolve(true)
+                console.log("token valid")
+            })
+        }
+    });
+}
+
+export {blizztoken};
