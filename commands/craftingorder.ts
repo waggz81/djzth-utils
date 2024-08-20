@@ -16,10 +16,9 @@ import {
 import * as https from "https";
 import {client, myLog, thisServer} from "../index";import {config, NODE_ENV} from "../config";
 import {db} from "../db";
-import {webreq} from "../helpers";
+import {blizztoken, validateToken, webreq} from "../helpers";
 
-let blizztoken: string;
-let tokenexpiration: number;
+
 let refreshTime: number;
 let refreshActive = false;
 
@@ -438,60 +437,7 @@ async function getBlizzProfile(link: string) {
 
 }
 
-async function getToken(): Promise<boolean> {
 
-    const options = {
-        hostname: 'oauth.battle.net', port: 443, path: '/token?=', method: 'POST', headers: {
-            "Content-Type": "multipart/form-data; boundary=---011000010111000001101001",
-            'Authorization': 'Basic ' + Buffer.from(config.battlenetclientid + ':' + config.battlenetsecret).toString('base64'),
-        },
-    };
-
-    return new Promise((resolve, reject) => {
-
-        const req = https.request(options, (res) => {
-            let data = "";
-            res.setEncoding('utf8');
-            res.on('data', (chunk) => {
-                data += chunk;
-            });
-            res.on('end', () => {
-                const body = JSON.parse(data);
-                if (body.access_token) {
-                    blizztoken = body.access_token;
-                    tokenexpiration = Date.now() + (body.expires_in * 1000);
-                    resolve(body)
-                } else {
-                    reject(data)
-                }
-            });
-
-        });
-
-        req.on('error', (e) => {
-            console.error(`problem with request: ${e.message}`);
-        });
-
-// Write data to request body
-        req.write("-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"grant_type\"\r\n\r\nclient_credentials\r\n-----011000010111000001101001--\r\n");
-        req.end();
-    });
-}
-
-async function validateToken() {
-    return new Promise((resolve) => {
-        if (blizztoken && tokenexpiration > Date.now()) {
-            resolve(true);
-            console.log("token valid")
-        } else {
-            console.log("missing or expired token, run gettoken")
-            getToken().then(async () => {
-                resolve(true)
-                console.log("token valid")
-            })
-        }
-    });
-}
 
 async function updateCharacterProfessions() {
 
@@ -562,7 +508,6 @@ async function updateCharacterProfessions() {
     })
 }
 
-
 async function updates() {
     myLog("Running updates...")
     await validateToken();
@@ -574,5 +519,5 @@ async function updates() {
         updates().catch(myLog);
     }, 1000 * 60 * 30); // 30 minutes
 }
- if (NODE_ENV !== 'development')
+if (NODE_ENV !== 'development')
     updates().catch(myLog);
