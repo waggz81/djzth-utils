@@ -21,8 +21,7 @@ module.exports = {
         let field2 = '';
         let field3 = '';
         for await (const guild of guilds) {
-           await getBnetRoster(guild.realm, guild.guildslug).then((guild) => {
-                console.log(guild)
+           await getBnetRoster(guild.realm, guild.guildslug).then((guild) => {// console.log(guild)
                     // @ts-ignore
                field1 += `${guild.name}\n`;
                     // @ts-ignore

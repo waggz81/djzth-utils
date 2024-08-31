@@ -190,12 +190,12 @@ export async function validateToken() {
     return new Promise((resolve) => {
         if (blizztoken && tokenexpiration > Date.now()) {
             resolve(true);
-            console.log("token valid")
+           // console.log("token valid")
         } else {
-            console.log("missing or expired token, run gettoken")
+           // console.log("missing or expired token, run gettoken")
             getToken().then(async () => {
                 resolve(true)
-                console.log("token valid")
+               // console.log("token valid")
             })
         }
     });

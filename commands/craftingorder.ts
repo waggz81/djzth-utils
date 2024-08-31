@@ -45,7 +45,6 @@ module.exports = {
             .setRequired(true)),
 
     async execute(interaction: CommandInteraction) {
-        console.log(interaction)
         let recipesNames: string = '';
         let recipesProf: string = '';
         await interaction.deferReply({ephemeral: true});
@@ -57,7 +56,6 @@ module.exports = {
             if (err) {
                 myLog(err)
             } else {
-                console.log(results);
                 if (results.length === 0) {
                     interaction.editReply({content: "No results. Please try again with a different search term."});
                     return;
@@ -67,7 +65,6 @@ module.exports = {
                 let selectMenuOptions: Array<StringSelectMenuOptionBuilder> = [];
                 for (const result of results) {
                     if (count > 24) break;
-                    console.log(result)
                     recipesNames += result.recipe_name + '\n';
                     recipesProf += result.tier_name + '\n';
                     selectMenuOptions.push(new StringSelectMenuOptionBuilder()
@@ -75,7 +72,6 @@ module.exports = {
                         .setValue(result.recipe_id.toString()));
                     count++;
                 }
-                console.log(selectMenuOptions);
                 selectMenu.addOptions(selectMenuOptions)
                 embed.addFields({name: "Recipes", value: recipesNames, inline: true}, {
                     name: "Profession", value: recipesProf, inline: true
@@ -517,7 +513,7 @@ async function updates() {
 
     setTimeout(async () => {
         updates().catch(myLog);
-    }, 1000 * 60 * 30); // 30 minutes
+    }, 1000 * 60 * 5); // 30 minutes
 }
-if (NODE_ENV !== 'development')
+//if (NODE_ENV !== 'development')
     updates().catch(myLog);
