@@ -14,7 +14,8 @@ import {
     StringSelectMenuOptionBuilder
 } from "discord.js";
 import * as https from "https";
-import {client, myLog, thisServer} from "../index";import {config, NODE_ENV} from "../config";
+import {client, myLog, thisServer} from "../index";
+import {config} from "../config";
 import {db} from "../db";
 import {blizztoken, validateToken, webreq} from "../helpers";
 
@@ -29,17 +30,19 @@ module.exports = {
         .addStringOption(option => option.setName("profession")
             .setDescription("The profession you want to search in")
             .setRequired(true)
-            .addChoices({name: "Alchemy", value: "Alchemy"}, {
-                name: "Blacksmithing", value: "Blacksmithing"
-            }, {name: "Enchanting", value: "Enchanting"}, {
-                name: "Engineering", value: "Engineering"
-            }, {name: "Herbalism", value: "Herbalism"}, {
-                name: "Inscription", value: "Inscription"
-            }, {name: "Jewelcrafting", value: "Jewelcrafting"}, {
-                name: "Leatherworking", value: "Leatherworking"
-            }, {name: "Mining", value: "Mining"}, {name: "Skinning", value: "Skinning"}, {
-                name: "Tailoring", value: "Tailoring"
-            }))
+            .addChoices(
+                {name: "Alchemy", value: "Alchemy"},
+                {name: "Blacksmithing", value: "Blacksmithing"},
+                {name: "Enchanting", value: "Enchanting"},
+                {name: "Engineering", value: "Engineering"},
+                {name: "Herbalism", value: "Herbalism"},
+                {name: "Inscription", value: "Inscription"},
+                {name: "Jewelcrafting", value: "Jewelcrafting"},
+                {name: "Leatherworking", value: "Leatherworking"},
+                {name: "Mining", value: "Mining"},
+                {name: "Skinning", value: "Skinning"},
+                {name: "Tailoring", value: "Tailoring"}
+            ))
         .addStringOption(option => option.setName('search')
             .setDescription('The recipe you want to search for')
             .setRequired(true)),
@@ -262,11 +265,11 @@ async function getGowRoster(gowAPIkey: string) {
 
 async function updateGuildRosters() {
     await validateToken();
-    if ((refreshTime && Date.now() - refreshTime < (6 * 60 * 1000)) || refreshActive) {
+    if ((refreshTime && (Date.now() - refreshTime) < (30 * 60 * 1000)) || refreshActive) {
         console.log("skipping roster update", Date.now() - refreshTime, refreshTime, refreshActive);
         return;
     } else {
-        console.log("Begin roster update...");
+        console.log("Begin roster update...", Date.now() - refreshTime, refreshTime, refreshActive);
     }
     refreshActive = true;
     let members: {
@@ -401,8 +404,10 @@ async function updateGuildRosters() {
             if (err) console.log(err); else {
                 console.log("Table 'guild_members' updated successfully.");
                 refreshTime = Date.now();
+
             }
         });
+        refreshActive = false;
     });
 
 }
@@ -432,7 +437,6 @@ async function getBlizzProfile(link: string) {
     });
 
 }
-
 
 
 async function updateCharacterProfessions() {
@@ -515,5 +519,6 @@ async function updates() {
         updates().catch(myLog);
     }, 1000 * 60 * 5); // 30 minutes
 }
+
 //if (NODE_ENV !== 'development')
-    updates().catch(myLog);
+updates().catch(myLog);
