@@ -1,11 +1,5 @@
 import {config} from "../config";
-import {
-    EmbedBuilder,
-    Events,
-    ThreadAutoArchiveDuration,
-    ForumChannel,
-    Snowflake
-} from "discord.js";
+import {EmbedBuilder, Events, ForumChannel, Snowflake, ThreadAutoArchiveDuration} from "discord.js";
 import {client, myLog, thisServer} from "../index";
 import {sendLFGPings} from "../helpers";
 
@@ -17,23 +11,22 @@ client.on(Events.ThreadCreate, async thread => {
         setTimeout(() => {
             thread.messages.fetch().then(messages => {
                 messages.forEach(message => {
-                   message.embeds.forEach(thisEmbed => {
-                       if (thisEmbed.fields.length === 5) {
-                           nameAndRealm = `${thisEmbed.fields[0].value}-${thisEmbed.fields[1].value}`;
-                       }
-                       else if (thisEmbed.description){
-                           const re = /<@(.*)>/;
-                           const submitterId = thisEmbed.description.match(re);
-                           if (submitterId) {
-                               submitterId.forEach(match => {
-                                   if (thread.members.cache.has(match)) {
-                                       submitterDiscordId = match;
-                                   }
-                               })
-                           }
-                       }
+                    message.embeds.forEach(thisEmbed => {
+                        if (thisEmbed.fields.length === 5) {
+                            nameAndRealm = `${thisEmbed.fields[0].value}-${thisEmbed.fields[1].value}`;
+                        } else if (thisEmbed.description) {
+                            const re = /<@(.*)>/;
+                            const submitterId = thisEmbed.description.match(re);
+                            if (submitterId) {
+                                submitterId.forEach(match => {
+                                    if (thread.members.cache.has(match)) {
+                                        submitterDiscordId = match;
+                                    }
+                                })
+                            }
+                        }
 
-                   })
+                    })
                 });
                 let submitter = thisServer.members.cache.get(submitterDiscordId);
                 if (!submitter) {
@@ -50,11 +43,10 @@ client.on(Events.ThreadCreate, async thread => {
                 }
                 const notesEmbed = new EmbedBuilder()
                     .setTitle('Copy & Paste for Inviters')
-                    .addFields(
-                        { name: 'Character', value: `\`${nameAndRealm}\`` },
-                        { name: 'Guild Note', value: `\`[XFa:${submitterNickname}]\``},
-                        { name: 'Officer Note', value: `\`<@${submitterDiscordId}>\``}
-                    );
+                    .addFields({name: 'Character', value: `\`${nameAndRealm}\``}, {
+                        name: 'Guild Note',
+                        value: `\`[XFa:${submitterNickname}]\``
+                    }, {name: 'Officer Note', value: `\`<@${submitterDiscordId}>\``});
 
                 thread.send({embeds: [notesEmbed]}).catch(err => console.log(err));
                 let missingGeneralAccessRole = false;
@@ -97,7 +89,7 @@ client.on(Events.ThreadCreate, async thread => {
         if (forumsautoapplytag[thread.parentId]) {
             const autotags: Snowflake[] = []
             forumsautoapplytag[thread.parentId].forEach((thistag: string) => {
-                const tag = (thread.parent as ForumChannel).availableTags.find(t => t.name.toLowerCase() === thistag.toLowerCase())?.id ;
+                const tag = (thread.parent as ForumChannel).availableTags.find(t => t.name.toLowerCase() === thistag.toLowerCase())?.id;
                 if (tag) {
                     autotags.push(tag as Snowflake);
                 }
@@ -112,7 +104,10 @@ client.on(Events.ThreadCreate, async thread => {
     if (config.lfgpostschannel.includes(thread.parentId)) {
         const lfgchannel = thisServer.channels.cache.get(config.lfgchannel);
         if (lfgchannel && lfgchannel.isTextBased()) {
-            sendLFGPings(thread, true, null, null);
+            setTimeout(() => {
+                sendLFGPings(thread, true, null, null);
+            }, 1000 * 3) // wait 3 seconds
+
         }
     }
 });
