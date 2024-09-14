@@ -52,6 +52,7 @@ const dadjokejob = schedule.scheduleJob(
 myLog(`Scheduled job: ${dadjokejob.name}`);
 */
 
+/*
 function cleanupAttendancePosts() {
     const teams: any[] = [];
     const teamInfo: any[] = [];
@@ -96,3 +97,4 @@ const attendancePostsCleanup = schedule.scheduleJob(
 );
 myLog(`Scheduled job: ${attendancePostsCleanup.name}`);
 cleanupAttendancePosts();
+*/
