@@ -1,13 +1,23 @@
 import {config} from "../config";
-import {EmbedBuilder, Events, ForumChannel, Snowflake, ThreadAutoArchiveDuration} from "discord.js";
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    EmbedBuilder,
+    Events,
+    ForumChannel,
+    GuildMemberFlags,
+    Snowflake,
+    ThreadAutoArchiveDuration
+} from "discord.js";
 import {client, myLog, thisServer} from "../index";
 import {sendLFGPings} from "../helpers";
 
 client.on(Events.ThreadCreate, async thread => {
+    // zth invite ticket
     if (thread.ownerId === '508391840525975553' && thread.name.startsWith('zth-')) {
         let nameAndRealm = '';
         let submitterDiscordId = '';
-        console.log("zth invite ticket thread created " + thread.id)
         setTimeout(() => {
             thread.messages.fetch().then(messages => {
                 messages.forEach(message => {
@@ -47,18 +57,18 @@ client.on(Events.ThreadCreate, async thread => {
                         name: 'Guild Note',
                         value: `\`[XFa:${submitterNickname}]\``
                     }, {name: 'Officer Note', value: `\`<@${submitterDiscordId}>\``});
+const buttonRow = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(new ButtonBuilder({
+        label: 'Ping On-Call', style: ButtonStyle.Primary, customId: 'invites-oncall-' + submitterDiscordId
+    }))
+    .addComponents(new ButtonBuilder({
+        label: 'Sorry We Missed You',
+        style: ButtonStyle.Secondary,
+        customId: 'invites-miss-' + submitterDiscordId
+    }))
 
-                thread.send({embeds: [notesEmbed]}).catch(err => console.log(err));
-                let missingGeneralAccessRole = false;
-                if (!submitter?.roles.cache.has(config.generalaccessrole)) {
-                    const noGeneralAccessWarningEmbed = new EmbedBuilder()
-                        .setTitle('WARNING')
-                        .setDescription('Submitter is missing the Community Member role. Ensure a Discord Access Ticket is opened.')
-                        .setColor('Red');
-                    thread.send({embeds: [noGeneralAccessWarningEmbed]});
-                    missingGeneralAccessRole = true;
-                }
-                if (!submitter?.nickname && !missingGeneralAccessRole) {
+                thread.send({embeds: [notesEmbed], components: [buttonRow]}).catch(err => console.log(err));
+                if (!submitter?.nickname) {
                     const noServerNameWarningEmbed = new EmbedBuilder()
                         .setTitle('WARNING')
                         .setDescription('Submitter is missing a server nickname. Notify Senior Community Leaders.')
@@ -66,6 +76,37 @@ client.on(Events.ThreadCreate, async thread => {
                     thread.send({embeds: [noServerNameWarningEmbed]});
                 }
             });
+        }, 1000 * 3);
+    }
+    // discord access ticket
+    if (/*thread.ownerId === '508391840525975553' &&*/ thread.name.startsWith('discord-')) {
+        setTimeout(() => {
+            thread.members.fetch().then(member => {
+                console.log(member)
+                member.forEach(thisMember => {
+                    if (!thisMember.guildMember?.roles.cache.has(config.generalaccessrole)) {
+                        const user = thisServer.members.cache.get(thisMember.id);
+                        if (user) {
+                            console.log(user)
+                            console.log(user.displayAvatarURL({extension: 'jpg', size: 1024}))
+                            const thisEmbed = new EmbedBuilder()
+                                .setTitle('User Info')
+                                .addFields({
+                                    name: 'Joined',
+                                    value: user.joinedAt?.toString() || 'Missing Data'
+                                })
+                                .addFields({
+                                    name: 'User Rejoined',
+                                    value: user.flags.has(GuildMemberFlags.DidRejoin) ? 'True' : 'False'
+                                })
+                            console.log(user.flags.has(GuildMemberFlags.DidRejoin))
+                            console.log(user.joinedAt)
+                            thread.send({embeds: [thisEmbed]});
+                            thread.send(user.displayAvatarURL({extension: 'jpg', size: 1024}))
+                        }
+                    }
+                })
+            })
         }, 1000 * 3);
     }
     // dj application auto mentions
@@ -100,6 +141,7 @@ client.on(Events.ThreadCreate, async thread => {
 
 });
 
+//lfg pings embed
 client.on(Events.ThreadCreate, async thread => {
     if (config.lfgpostschannel.includes(thread.parentId)) {
         const lfgchannel = thisServer.channels.cache.get(config.lfgchannel);
