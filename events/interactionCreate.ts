@@ -111,7 +111,7 @@ client.on(Events.InteractionCreate, async interaction => {
         content = `<@&1054905212155994152>`;
     } else if (customID[1] === 'miss') {
         content = `<@${customID[2]}>`;
-        embed.setDescription(`Hello there <@${customID[2]}>, it looks like we may have missed you! Sorry about that, sometimes our schedules just don't line up.` + ` When you're back online and available for your invite, hit that \`Ping On-Call\` button or mention the <@&1054905212155994152> role and hopefully there will be someone available` + ` for you at that time!\n\n_(Don't worry if you get an error message from Discord, it's working despite them saying it didn't!!)_ `);
+        embed.setDescription(`Hello there <@${customID[2]}>, it looks like we may have missed you! Sorry about that, sometimes our schedules just don't line up.` + ` When you're back online and available for your invite, hit that \`Ping On-Call\` button or mention the <@&1054905212155994152> role and hopefully there will be someone available` + ` for you at that time!\n\n_(Don't worry if you get an error message from Discord, it's working despite them saying it didn't!!)_ \n\n-# sent by <@${interaction.user.id}>`);
         actionrow.addComponents(new ButtonBuilder({
             label: 'Ping On-Call', style: ButtonStyle.Primary, customId: 'invites-oncall-' + customID[2]
         }))
