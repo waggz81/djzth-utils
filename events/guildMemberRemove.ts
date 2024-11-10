@@ -4,6 +4,7 @@ import {client, myLog, updateStatus} from "../index";
 
 client.on(Events.GuildMemberRemove, async (member) => {
     let roles = '';
+    let approvedroles = '';
     if (member.partial) {
         member.guild.members.fetch(member.user.id).then((thisMember)=>{
             member = thisMember;
@@ -12,6 +13,9 @@ client.on(Events.GuildMemberRemove, async (member) => {
     member.roles.cache.forEach(role => {
         if (role.name !== '@everyone') {
             roles += role.name + '\n'
+        }
+        if (config.approved_roles.includes(role.id)) {
+            approvedroles += `<@&${role.id}> `;
         }
     });
     const memberSince = (member.joinedAt) ? member.joinedAt : "unknown";
@@ -34,5 +38,12 @@ client.on(Events.GuildMemberRemove, async (member) => {
                 } else myLog('Error: Missing joinsparts audit log channel.');
             });
         }).catch(myLog);
+    if (approvedroles) {
+        member.guild.channels.fetch(config.access_control)
+            .then(thisChan  => {
+                (thisChan as TextChannel).send({embeds: [embed1], content: approvedroles}).catch(myLog);
+            })
+            .catch(myLog);
+    }
     updateStatus();
 });
